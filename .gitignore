@@ -1,0 +1,16 @@
+# Temporary and private planning directory
+tmp/
+
+# Ruby bundler & gems
+/.bundle/
+/vendor/bundle/
+/pkg/
+*.gem
+
+# Environment & credentials
+.env
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
