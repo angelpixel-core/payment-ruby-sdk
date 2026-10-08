@@ -8,12 +8,13 @@ module Payment
       DEFAULT_OPEN_TIMEOUT = 5
       DEFAULT_MAX_RETRIES = 2
 
-      attr_accessor :base_url, :api_version, :signing_secret, :timeout,
+      attr_accessor :base_url, :api_version, :api_key, :signing_secret, :timeout,
                     :open_timeout, :max_retries, :logger
 
       def initialize
         @base_url = nil
         @api_version = DEFAULT_API_VERSION
+        @api_key = nil
         @signing_secret = nil
         @timeout = DEFAULT_TIMEOUT
         @open_timeout = DEFAULT_OPEN_TIMEOUT

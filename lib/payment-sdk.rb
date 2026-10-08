@@ -2,6 +2,7 @@
 
 require_relative "payment/sdk/version"
 require_relative "payment/sdk/configuration"
+require_relative "payment/sdk/client"
 
 module Payment
   module SDK
