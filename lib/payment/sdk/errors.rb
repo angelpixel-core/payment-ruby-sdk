@@ -7,6 +7,7 @@ module Payment
     class ConfigurationError < Error; end
     class NetworkError < Error; end
     class TimeoutError < Error; end
+    class SignatureVerificationError < Error; end
 
     class ApiError < Error
       attr_reader :status_code, :code, :details, :request_id, :raw_body
