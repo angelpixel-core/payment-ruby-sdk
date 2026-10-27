@@ -1,25 +1,10 @@
 # frozen_string_literal: true
 
-require "payment/sdk/infrastructure/http/net_http_adapter"
-
-require "payment/sdk/application/commands/create_payment_intent"
-require "payment/sdk/application/commands/confirm_payment_intent"
-require "payment/sdk/application/commands/capture_payment_intent"
-require "payment/sdk/application/commands/create_refund"
-
-require "payment/sdk/application/queries/get_payment_intent"
-require "payment/sdk/application/queries/get_payment_lifecycle"
-require "payment/sdk/application/queries/get_transaction_report"
-require "payment/sdk/application/queries/get_transaction_snapshot"
-
-require "payment/sdk/application/use_cases/process_webhook"
-require "payment/sdk/application/use_cases/reconcile_transactions"
-
-require "payment/sdk/infrastructure/crypto/hmac_sha256_verifier"
-require "payment/sdk/infrastructure/webhooks/event_parser"
-require "payment/sdk/infrastructure/persistence/in_memory_inbox_store"
-require "payment/sdk/infrastructure/persistence/in_memory_snapshot_store"
-require "payment/sdk/infrastructure/reporting/in_memory_mismatch_reporter"
+require "payment/sdk/infrastructure/adapters/http/client/net_http"
+require "payment/sdk/infrastructure/adapters/crypto/signature/verifier/hmac_sha256"
+require "payment/sdk/infrastructure/adapters/persistence/inbox/store/in_memory"
+require "payment/sdk/infrastructure/adapters/persistence/snapshot/store/in_memory"
+require "payment/sdk/infrastructure/adapters/reporting/mismatch/reporter/in_memory"
 
 require "payment/sdk/interfaces/payments/client"
 require "payment/sdk/interfaces/refunds/client"
@@ -118,7 +103,7 @@ module Payment
 
       def http_client
         @http_client ||= begin
-          adapter = Infrastructure::Http::NetHttpAdapter.new(
+          adapter = Infrastructure::Adapters::Http::Client::NetHttp.new(
             base_url: @config.base_url || "https://api.payment.com",
             open_timeout: @config.open_timeout,
             read_timeout: @config.timeout,
@@ -129,19 +114,19 @@ module Payment
       end
 
       def signature_verifier
-        @signature_verifier ||= Infrastructure::Crypto::HmacSha256Verifier.new
+        @signature_verifier ||= Infrastructure::Adapters::Crypto::Signature::Verifier::HmacSha256.new
       end
 
       def default_inbox_store
-        @default_inbox_store ||= Infrastructure::Persistence::InMemoryInboxStore.new
+        @default_inbox_store ||= Infrastructure::Adapters::Persistence::Inbox::Store::InMemory.new
       end
 
       def default_snapshot_store
-        @default_snapshot_store ||= Infrastructure::Persistence::InMemorySnapshotStore.new
+        @default_snapshot_store ||= Infrastructure::Adapters::Persistence::Snapshot::Store::InMemory.new
       end
 
       def default_mismatch_reporter
-        @default_mismatch_reporter ||= Infrastructure::Reporting::InMemoryMismatchReporter.new
+        @default_mismatch_reporter ||= Infrastructure::Adapters::Reporting::Mismatch::Reporter::InMemory.new
       end
 
       def extract_delivery_id(payload)

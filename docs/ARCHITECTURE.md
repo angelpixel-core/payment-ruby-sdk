@@ -1,148 +1,158 @@
 # SDK Architecture (`Payment::SDK`)
 
-This document outlines the architectural guidelines for the `Payment::SDK` Ruby gem, applying **Clean Architecture**, **Hexagonal Architecture (Ports & Adapters)**, **Domain-Driven Design (DDD)**, and **CQRS (Command-Query Responsibility Segregation)**.
+This document outlines the architectural guidelines for the `Payment::SDK` Ruby gem, applying **Clean Architecture**, **Hexagonal Architecture (Ports & Adapters)**, **Domain-Driven Design (DDD)**, **Bounded Contexts**, **SOLID Principles**, and **CQRS (Command-Query Responsibility Segregation)**.
 
 ---
 
-## 1. Core Principles
+## 1. Architectural Blueprint & Bounded Contexts
+
+The SDK is partitioned into **4 Primary Bounded Contexts** plus a foundational **Shared Kernel**:
 
 ```mermaid
 graph TD
-    subgraph Infrastructure ["Infrastructure (Secondary & Primary Adapters)"]
-        NetHttp["Net::HTTP Adapter"]
-        MemInbox["InMemoryWebhookInboxStore"]
-        MemSnapshot["InMemorySnapshotStore"]
-        HmacVerifier["OpenSSL HMAC-SHA256 Verifier"]
+    subgraph DrivingAdapters ["Driving / Primary Adapters (Interfaces)"]
+        PaymentsClient["Interfaces::Payments::Client"]
+        RefundsClient["Interfaces::Refunds::Client"]
+        WebhooksClient["Interfaces::Webhooks::Client"]
+        ReconciliationClient["Interfaces::Reconciliation::Client"]
     end
 
-    subgraph Application ["Application Layer (Use Cases / CQRS)"]
-        Commands["Commands (ExecutePaymentCommand, RefundCommand...)"]
-        Queries["Queries (FetchReportQuery, FetchSnapshotQuery...)"]
-        WebhookUseCase["ProcessWebhookDelivery"]
-        ReconcileUseCase["ReconcileTransactions"]
+    subgraph ClientFacade ["Client Facade"]
+        GlobalClient["Payment::SDK::Client"]
     end
 
-    subgraph Domain ["Domain Layer (Pure DDD Core)"]
-        Entities["Entities & Aggregates (PaymentIntent, Charge, Refund)"]
-        ValueObjects["Value Objects (Money, Currency, IdempotencyKey)"]
-        Ports["Ports / Interfaces (HttpClientPort, InboxStorePort, etc.)"]
-        DomainErrors["Domain Errors (PaymentDeclined, DriftDetected...)"]
+    subgraph ApplicationLayer ["Application Layer (CQRS & Use Cases)"]
+        PaymentsApp["application/payments/ (commands & queries)"]
+        RefundsApp["application/refunds/ (commands & queries)"]
+        WebhooksApp["application/webhooks/ (use_cases/process)"]
+        ReconciliationApp["application/reconciliation/ (use_cases/reconcile, queries)"]
+        SharedApp["application/shared/ (BaseCommand, BaseQuery)"]
     end
 
-    Infrastructure -->|Implements Ports| Domain
-    Application -->|Orchestrates| Domain
-    Application -->|Invokes via Ports| Infrastructure
+    subgraph DomainLayer ["Domain Layer (Pure Core)"]
+        PaymentsDomain["domain/payments/ (Entities: PaymentIntent, PaymentAttempt, Charge)"]
+        RefundsDomain["domain/refunds/ (Entities: Refund)"]
+        WebhooksDomain["domain/webhooks/ (Entities: WebhookEvent, Ports: Inbox::Store, Signature::Verifier)"]
+        ReconciliationDomain["domain/reconciliation/ (Ports: Snapshot::Store, Mismatch::Reporter)"]
+        SharedDomain["domain/shared/ (ValueObjects: Money, Currency, IdempotencyKey, Ports: Http::Client)"]
+    end
+
+    subgraph DrivenAdapters ["Driven / Secondary Adapters (Infrastructure)"]
+        NetHttp["Infrastructure::Adapters::Http::Client::NetHttp"]
+        ErrorMapper["Infrastructure::Adapters::Http::ErrorMapper"]
+        HmacVerifier["Infrastructure::Adapters::Crypto::Signature::Verifier::HmacSha256"]
+        InMemoryInbox["Infrastructure::Adapters::Persistence::Inbox::Store::InMemory"]
+        InMemorySnapshot["Infrastructure::Adapters::Persistence::Snapshot::Store::InMemory"]
+        InMemoryMismatch["Infrastructure::Adapters::Reporting::Mismatch::Reporter::InMemory"]
+        WebhookParser["Infrastructure::Adapters::Webhooks::EventParser"]
+    end
+
+    GlobalClient --> PaymentsClient
+    GlobalClient --> RefundsClient
+    GlobalClient --> WebhooksClient
+    GlobalClient --> ReconciliationClient
+
+    PaymentsClient --> PaymentsApp
+    RefundsClient --> RefundsApp
+    WebhooksClient --> WebhooksApp
+    ReconciliationClient --> ReconciliationApp
+
+    PaymentsApp --> PaymentsDomain
+    PaymentsApp --> NetHttp
+    RefundsApp --> RefundsDomain
+    RefundsApp --> NetHttp
+    WebhooksApp --> WebhooksDomain
+    ReconciliationApp --> ReconciliationDomain
+
+    DrivenAdapters -.->|Implements Ports| DomainLayer
 ```
 
-### 1.1. Clean & Hexagonal Architecture (Ports & Adapters)
-- **Framework & Runtime Independence**: The core domain has zero dependencies on Rails, Sinatra, or third-party HTTP clients (Faraday, HTTParty). It uses pure Ruby (`frozen_string_literal: true`).
-- **Ports (Abstract Interfaces / Contracts)**:
-  - `HttpClientPort`: Contract for executing HTTP requests (`method`, `path`, `headers`, `body`, `query_params`, `timeout`, `retries`).
-  - `InboxStorePort`: Contract to persist and query incoming webhook deliveries before applying mutations.
-  - `SnapshotStorePort`: Contract to store reconciliation run outcomes.
-  - `MismatchReporterPort`: Contract to alert or log discrepancies without mutating transactional business state.
-  - `SignatureVerifierPort`: Contract to verify cryptographic signatures.
+---
+
+## 2. Namespace & Granularity Conventions
+
+### 2.1. Layering and Directory Structure
+- **`domain/<context>/`**:
+  - `entities/`: Domain Aggregates and Entities encapsulating state invariants.
+  - `ports/`: Abstract contracts (roles) without redundant `Port` suffix (e.g. `Ports::Inbox::Store`, `Ports::Signature::Verifier`).
+- **`application/<context>/`**:
+  - `commands/<aggregate>/<action>.rb`: CQRS commands producing state changes.
+  - `queries/<aggregate>/<action>.rb`: CQRS read-only queries.
+  - `use_cases/<action>.rb`: Complex workflows orchestrating multiple aggregates, stores, or verifiers.
+- **`interfaces/<context>/`**:
+  - Sub-clients providing context-specific APIs (`client.payments`, `client.refunds`, `client.webhooks`, `client.reconciliation`).
+- **`infrastructure/adapters/<technical_concern>/<role>/<implementation>.rb`**:
+  - Secondary driven adapters categorized by technology and specific implementation.
+
+### 2.2. Typing Rules: `Data` vs `Class` vs `Struct`
+- **Usa `Data` (Ruby 3.2+)**:
+  - Para DTOs (Data Transfer Objects), snapshots de estado, eventos inmutables y Value Objects sin mutación interna (`Domain::Webhooks::Entities::WebhookEvent`).
+  - Beneficios: inmutabilidad por defecto, `deconstruct`, `deconstruct_keys`, igualdad estructural (`==`, `hash`), menor consumo de memoria.
+- **Usa `Class` tradicional**:
+  - Para Agregados / Entidades DDD (`PaymentIntent`, `Charge`, `Refund`) que encapsulan transiciones de estado, métodos de consulta de negocio complejos (`succeeded?`, `fully_captured?`), o cuando se requiere validación estricta de invariantes desde el constructor.
+  - Para test doubles con estado y mocks interactivos.
+- **Usa `Struct`**:
+  - Prácticamente solo en tests rápidos para mockear respuestas HTTP en una sola línea (ej. `Struct.new(:code, :body).new("200", "{}")`).
+
+---
+
+## 3. Bounded Context Specifications
+
+### 3.1. Payments Context (`domain/payments`, `application/payments`, `interfaces/payments`)
+- **Entities**:
+  - `PaymentIntent`: Estados (`requires_payment_method`, `requires_confirmation`, `requires_capture`, `processing`, `succeeded`, `canceled`).
+  - `PaymentAttempt`: Historial de ejecuciones de cobro.
+  - `Charge`: Transacción capturada asociada a un intent.
+- **Commands**:
+  - `Commands::Intents::Create`: Inicializa un payment intent (`/payment_intents`).
+  - `Commands::Intents::Confirm`: Confirma el intent con un método de pago (`/payment_intents/:id/confirm`).
+  - `Commands::Intents::Capture`: Captura fondos autorizados (`/payment_intents/:id/capture`).
+- **Queries**:
+  - `Queries::Intents::Get`: Inspección de intent (`/payment_intents/:id`).
+  - `Queries::Lifecycles::Get`: Auditoría del ciclo de vida (`/payment_intents/:id/lifecycle`).
+  - `Queries::Attempts::Get`: Detalle de intento (`/payment_attempts/:id`).
+  - `Queries::Charges::Get`: Detalle de cobro (`/charges/:id`).
+
+### 3.2. Refunds Context (`domain/refunds`, `application/refunds`, `interfaces/refunds`)
+- **Entities**:
+  - `Refund`: Reembolso parcial o total sobre un charge existente.
+- **Commands**:
+  - `Commands::Create`: Emite un reembolso (`/refunds`).
+- **Queries**:
+  - `Queries::Get`: Consulta un reembolso (`/refunds/:id`).
+
+### 3.3. Webhooks Context (`domain/webhooks`, `application/webhooks`, `interfaces/webhooks`)
+- **Entities**:
+  - `WebhookEvent`: Representación inmutable (`Data.define`) de un webhook entrante.
+- **Ports**:
+  - `Ports::Inbox::Store`: Persistencia idempotente (`save`, `find_by_delivery_id`, `update_status`).
+  - `Ports::Signature::Verifier`: Verificación de firma criptográfica (`verify`).
+- **Use Cases**:
+  - `UseCases::Process`: Orquesta el patrón Inbox (persistencia en `:received`, verificación HMAC, aplicación de proyección de negocio y transición a `:processed`, `:rejected_signature`, o `:failed`).
 - **Adapters**:
-  - `Adapters::Http::NetHttpAdapter`: Built on Ruby standard library `net/http` with SSL support, configurable timeouts, and exponential retries.
-  - `Adapters::Persistence::InMemoryInboxStore`: Default in-memory implementation for testing and simple environments.
-  - `Adapters::Persistence::InMemorySnapshotStore`: Default in-memory implementation for reconciliation results.
-  - `Adapters::Crypto::HmacSha256Verifier`: Cryptographic verification using `openssl` with constant-time comparison (`OpenSSL.fixed_length_secure_compare` / `Rack::Utils.secure_compare`).
+  - `Infrastructure::Adapters::Crypto::Signature::Verifier::HmacSha256`: Implementación OpenSSL timing-safe (`OpenSSL.fixed_length_secure_compare`).
+  - `Infrastructure::Adapters::Persistence::Inbox::Store::InMemory`: Almacén idempotente thread-safe.
+  - `Infrastructure::Adapters::Webhooks::EventParser`: Parser JSON/Hash a `WebhookEvent`.
+
+### 3.4. Reconciliation Context (`domain/reconciliation`, `application/reconciliation`, `interfaces/reconciliation`)
+- **Ports**:
+  - `Ports::Snapshot::Store`: Persistencia de snapshots (`save`, `find`, `all`).
+  - `Ports::Mismatch::Reporter`: Reporte de discrepancias (`report(snapshot:)`).
+- **Queries**:
+  - `Queries::Reports::Get`: Consulta canónica de transacciones (`/reports/transactions`).
+  - `Queries::Snapshots::Get`: Export determinístico para diffing (`/reports/transactions?view=snapshot`).
+- **Use Cases**:
+  - `UseCases::Reconcile`: Detección de drift entre proyecciones locales y el snapshot remoto de la plataforma.
+  - Drifts detectados: `:match`, `:status_drift`, `:amount_drift`, `:attempt_drift`, `:capture_drift`, `:refund_drift`, `:missing_local`, `:missing_remote`.
+- **Adapters**:
+  - `Infrastructure::Adapters::Persistence::Snapshot::Store::InMemory`: Almacén de snapshots thread-safe.
+  - `Infrastructure::Adapters::Reporting::Mismatch::Reporter::InMemory`: Recopilador de reportes de drift thread-safe.
 
 ---
 
-## 2. Domain-Driven Design (DDD)
+## 4. Symmetry & Testing Architecture
 
-- **Entities & Aggregates**:
-  - `PaymentIntent`: Encapsulates payment lifecycle (`requires_payment_method`, `requires_confirmation`, `requires_capture`, `processing`, `succeeded`, `canceled`).
-  - `PaymentAttempt`: Specific execution attempt for an intent.
-  - `Charge`: Captured transaction associated with an intent.
-  - `Refund`: Partial or total refund issued on a charge.
-  - `WebhookEvent`: Event emitted by the platform containing `event_id`, `event_type`, `data`, and `created_at`.
-- **Value Objects**:
-  - `Money`: Integer cent amounts to prevent floating-point inaccuracies.
-  - `Currency`: Normalized 3-letter ISO code (e.g., `USD`).
-  - `IdempotencyKey`: Non-empty validated string for state-mutating requests.
-  - `Signature`: Hex digest and timestamp for security verification.
-- **Domain Invariants**:
-  - Every mutating request requires a non-empty `Idempotency-Key` header.
-  - Webhooks must be persisted to the Inbox in `:received` status before any projection or business mutation is executed.
-  - Reconciliation is strictly read-only and must never modify transactional state.
-
----
-
-## 3. CQRS (Command & Query Responsibility Segregation)
-
-Mutations (Commands) and inspections (Queries) are strictly segregated:
-
-### 3.1. Commands (State-Mutating Operations)
-All commands require an `Idempotency-Key` and produce state changes:
-- `CreatePaymentIntentCommand`: Initializes an intent on the platform.
-- `ConfirmPaymentIntentCommand`: Confirms the intent with a payment method.
-- `CapturePaymentIntentCommand`: Captures authorized funds.
-- `CreateRefundCommand`: Issues a refund on an existing charge.
-
-### 3.2. Queries (Read-Only Inspection Operations)
-Pure, idempotent HTTP `GET` requests without side effects or idempotency key requirements:
-- `GetPaymentIntentQuery`: Retrieves the current intent state.
-- `GetPaymentLifecycleQuery`: Fetches state transitions and audit history.
-- `GetPaymentAttemptQuery`: Retrieves attempt details.
-- `GetChargeQuery`: Retrieves charge details.
-- `GetRefundQuery`: Retrieves refund details.
-- `GetTransactionReportQuery`: Canonical transaction report (`/v1/reports/transactions`).
-- `GetTransactionSnapshotQuery`: Deterministic export for diffing (`/v1/reports/transactions?view=snapshot`).
-
----
-
-## 4. Inbox Pattern (Resilient Webhook Processing)
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Dispatcher as Go Payment Platform
-    participant Processor as WebhookProcessor (Application)
-    participant Store as InboxStore (Port / DB)
-    participant Verifier as SignatureVerifier (Port)
-    participant Projection as Business Projection (Consumer App)
-
-    Dispatcher->>Processor: POST webhook (Payload + X-Sandbox-Signature)
-    Processor->>Store: find_by_delivery_id(delivery_id)
-    alt Already exists with identical payload
-        Store-->>Processor: Existing entry
-        Processor-->>Dispatcher: Returns :duplicate (without reapplying projection)
-    else Already exists with conflicting payload
-        Processor-->>Dispatcher: Raises ArgumentError (Payload conflict)
-    else First delivery
-        Processor->>Store: persist(status: :received)
-        Processor->>Verifier: verify(payload, signature)
-        alt Invalid signature
-            Processor->>Store: update(status: :rejected_signature)
-            Processor-->>Dispatcher: Rejected signature
-        else Valid signature
-            Processor->>Store: update(status: :validated)
-            Processor->>Projection: apply!(entry)
-            alt Projection fails
-                Processor->>Store: update(status: :failed, error)
-                Processor-->>Dispatcher: Propagates error (allows dispatcher retry)
-            else Projection succeeds
-                Processor->>Store: update(status: :processed)
-                Processor-->>Dispatcher: Status :processed
-            end
-        end
-    end
-```
-
----
-
-## 5. Reconciliation Engine (Drift Detection)
-
-The engine reconciles local consumer projections against the Go platform's transaction snapshot:
-- **Comparable Fields**: `status`, `latest_attempt_id`, `charge_id`, `amount`, `captured_amount`, `refunded_amount`, `currency`.
-- **Drift Types**:
-  - `:status_drift`: Mismatched transaction status.
-  - `:attempt_drift`: Mismatched latest attempt ID.
-  - `:capture_drift`: Mismatched captured amount.
-  - `:refund_drift`: Mismatched refunded amount.
-  - `:amount_drift`: Mismatched initial amount.
-  - `:missing_local`: Record present in the remote snapshot but absent locally.
-  - `:missing_remote`: Record present locally but absent in the remote snapshot.
-- **Reporting Boundary**: Detected mismatches are stored in `SnapshotStore` and reported via `MismatchReporter` for auditing, without modifying local business records.
+La suite de pruebas en `test/payment/sdk/` es un espejo exacto 1:1 de `lib/payment/sdk/`:
+- Cada entidad, puerto, comando, query, caso de uso y adaptador cuenta con su archivo de prueba dedicado.
+- `Payment::SDK::Client` actúa como fachada global manteniendo compatibilidad contextual (`client.payments`, `client.refunds`, `client.webhooks`, `client.reconciliation`) y métodos delegados de primer nivel (`create_payment_intent`, `reconcile`, etc.).
+- Sin advertencias de redefinición de métodos en el entorno de pruebas.

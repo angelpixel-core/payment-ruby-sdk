@@ -179,8 +179,8 @@ Para garantizar inmutabilidad, rendimiento y expresividad en Ruby 3.2+:
 ---
 
 ### Fase 5: Limpieza, Consolidación y Verificación de Release
-- [ ] **5.1** Eliminar archivos obsoletos y carpetas residuales vacías.
-- [ ] **5.2** Actualizar documentación de arquitectura en `docs/ARCHITECTURE.md`.
-- [ ] **5.3** Actualizar el árbol canónico en `TREE.txt`.
-- [ ] **5.4** Ejecutar `examples/smoke_test.rb` y verificar ejecución sin advertencias ni errores.
-- [ ] **5.5** Ejecutar suite completa con `bundle exec rake test` (todas las aserciones pasando al 100%).
+- [x] **5.1** Eliminar archivos obsoletos y carpetas residuales vacías.
+- [x] **5.2** Actualizar documentación de arquitectura en `docs/ARCHITECTURE.md`.
+- [x] **5.3** Actualizar el árbol canónico en `TREE.txt`.
+- [x] **5.4** Ejecutar `examples/smoke_test.rb` y verificar ejecución sin advertencias ni errores.
+- [x] **5.5** Ejecutar suite completa con `bundle exec rake test` (todas las aserciones pasando al 100%).
