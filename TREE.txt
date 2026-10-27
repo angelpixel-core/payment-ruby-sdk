@@ -1,228 +1,230 @@
-.
-├── bin
-│   └── console
-├── docs
-│   ├── roadmap
-│   │   └── 001-architecture_normalization_and_bounded_contexts.md
-│   └── ARCHITECTURE.md
-├── examples
-│   └── smoke_test.rb
-├── lib
-│   ├── payment
-│   │   ├── sdk
-│   │   │   ├── application
-│   │   │   │   ├── payments
-│   │   │   │   │   ├── commands
-│   │   │   │   │   │   └── intents
-│   │   │   │   │   │       ├── capture.rb
-│   │   │   │   │   │       ├── confirm.rb
-│   │   │   │   │   │       └── create.rb
-│   │   │   │   │   └── queries
-│   │   │   │   │       ├── attempts
-│   │   │   │   │       │   └── get.rb
-│   │   │   │   │       ├── charges
-│   │   │   │   │       │   └── get.rb
-│   │   │   │   │       ├── intents
-│   │   │   │   │       │   └── get.rb
-│   │   │   │   │       └── lifecycles
-│   │   │   │   │           └── get.rb
-│   │   │   │   ├── reconciliation
-│   │   │   │   │   ├── queries
-│   │   │   │   │   │   ├── reports
-│   │   │   │   │   │   │   └── get.rb
-│   │   │   │   │   │   └── snapshots
-│   │   │   │   │   │       └── get.rb
-│   │   │   │   │   └── use_cases
-│   │   │   │   │       └── reconcile.rb
-│   │   │   │   ├── refunds
-│   │   │   │   │   ├── commands
-│   │   │   │   │   │   └── create.rb
-│   │   │   │   │   └── queries
-│   │   │   │   │       └── get.rb
-│   │   │   │   ├── shared
-│   │   │   │   │   ├── base_command.rb
-│   │   │   │   │   └── base_query.rb
-│   │   │   │   └── webhooks
-│   │   │   │       └── use_cases
-│   │   │   │           └── process.rb
-│   │   │   ├── domain
-│   │   │   │   ├── payments
-│   │   │   │   │   └── entities
-│   │   │   │   │       ├── charge.rb
-│   │   │   │   │       ├── payment_attempt.rb
-│   │   │   │   │       └── payment_intent.rb
-│   │   │   │   ├── reconciliation
-│   │   │   │   │   └── ports
-│   │   │   │   │       ├── mismatch
-│   │   │   │   │       │   └── reporter.rb
-│   │   │   │   │       └── snapshot
-│   │   │   │   │           └── store.rb
-│   │   │   │   ├── refunds
-│   │   │   │   │   └── entities
-│   │   │   │   │       └── refund.rb
-│   │   │   │   ├── shared
-│   │   │   │   │   ├── ports
-│   │   │   │   │   │   └── http
-│   │   │   │   │   │       └── client.rb
-│   │   │   │   │   └── value_objects
-│   │   │   │   │       ├── currency.rb
-│   │   │   │   │       ├── idempotency_key.rb
-│   │   │   │   │       └── money.rb
-│   │   │   │   └── webhooks
-│   │   │   │       ├── entities
-│   │   │   │       │   └── webhook_event.rb
-│   │   │   │       └── ports
-│   │   │   │           ├── inbox
-│   │   │   │           │   └── store.rb
-│   │   │   │           └── signature
-│   │   │   │               └── verifier.rb
-│   │   │   ├── infrastructure
-│   │   │   │   └── adapters
-│   │   │   │       ├── crypto
-│   │   │   │       │   └── signature
-│   │   │   │       │       └── verifier
-│   │   │   │       │           └── hmac_sha256.rb
-│   │   │   │       ├── http
-│   │   │   │       │   ├── client
-│   │   │   │       │   │   └── net_http.rb
-│   │   │   │       │   └── error_mapper.rb
-│   │   │   │       ├── persistence
-│   │   │   │       │   ├── inbox
-│   │   │   │       │   │   └── store
-│   │   │   │       │   │       └── in_memory.rb
-│   │   │   │       │   └── snapshot
-│   │   │   │       │       └── store
-│   │   │   │       │           └── in_memory.rb
-│   │   │   │       ├── reporting
-│   │   │   │       │   └── mismatch
-│   │   │   │       │       └── reporter
-│   │   │   │       │           └── in_memory.rb
-│   │   │   │       └── webhooks
-│   │   │   │           └── event_parser.rb
-│   │   │   ├── interfaces
-│   │   │   │   ├── payments
-│   │   │   │   │   └── client.rb
-│   │   │   │   ├── reconciliation
-│   │   │   │   │   └── client.rb
-│   │   │   │   ├── refunds
-│   │   │   │   │   └── client.rb
-│   │   │   │   └── webhooks
-│   │   │   │       └── client.rb
-│   │   │   ├── client.rb
-│   │   │   ├── configuration.rb
-│   │   │   ├── errors.rb
-│   │   │   └── version.rb
-│   │   └── sdk.rb
-│   └── payment-sdk.rb
-├── test
-│   ├── payment
-│   │   └── sdk
-│   │       ├── application
-│   │       │   ├── payments
-│   │       │   │   ├── commands
-│   │       │   │   │   └── intents
-│   │       │   │   │       ├── capture_test.rb
-│   │       │   │   │       ├── confirm_test.rb
-│   │       │   │   │       └── create_test.rb
-│   │       │   │   └── queries
-│   │       │   │       ├── attempts
-│   │       │   │       │   └── get_test.rb
-│   │       │   │       ├── charges
-│   │       │   │       │   └── get_test.rb
-│   │       │   │       ├── intents
-│   │       │   │       │   └── get_test.rb
-│   │       │   │       └── lifecycles
-│   │       │   │           └── get_test.rb
-│   │       │   ├── reconciliation
-│   │       │   │   ├── queries
-│   │       │   │   │   ├── reports
-│   │       │   │   │   │   └── get_test.rb
-│   │       │   │   │   └── snapshots
-│   │       │   │   │       └── get_test.rb
-│   │       │   │   └── use_cases
-│   │       │   │       └── reconcile_test.rb
-│   │       │   ├── refunds
-│   │       │   │   ├── commands
-│   │       │   │   │   └── create_test.rb
-│   │       │   │   └── queries
-│   │       │   │       └── get_test.rb
-│   │       │   ├── shared
-│   │       │   │   ├── base_command_test.rb
-│   │       │   │   └── base_query_test.rb
-│   │       │   └── webhooks
-│   │       │       └── use_cases
-│   │       │           └── process_test.rb
-│   │       ├── domain
-│   │       │   ├── payments
-│   │       │   │   └── entities
-│   │       │   │       ├── charge_test.rb
-│   │       │   │       ├── payment_attempt_test.rb
-│   │       │   │       └── payment_intent_test.rb
-│   │       │   ├── reconciliation
-│   │       │   │   └── ports
-│   │       │   │       ├── mismatch
-│   │       │   │       │   └── reporter_test.rb
-│   │       │   │       └── snapshot
-│   │       │   │           └── store_test.rb
-│   │       │   ├── refunds
-│   │       │   │   └── entities
-│   │       │   │       └── refund_test.rb
-│   │       │   ├── shared
-│   │       │   │   ├── ports
-│   │       │   │   │   └── http
-│   │       │   │   │       └── client_test.rb
-│   │       │   │   └── value_objects
-│   │       │   │       ├── currency_test.rb
-│   │       │   │       ├── idempotency_key_test.rb
-│   │       │   │       └── money_test.rb
-│   │       │   └── webhooks
-│   │       │       ├── entities
-│   │       │       │   └── webhook_event_test.rb
-│   │       │       └── ports
-│   │       │           ├── inbox
-│   │       │           │   └── store_test.rb
-│   │       │           └── signature
-│   │       │               └── verifier_test.rb
-│   │       ├── infrastructure
-│   │       │   └── adapters
-│   │       │       ├── crypto
-│   │       │       │   └── signature
-│   │       │       │       └── verifier
-│   │       │       │           └── hmac_sha256_test.rb
-│   │       │       ├── http
-│   │       │       │   ├── client
-│   │       │       │   │   └── net_http_test.rb
-│   │       │       │   └── error_mapper_test.rb
-│   │       │       ├── persistence
-│   │       │       │   ├── inbox
-│   │       │       │   │   └── store
-│   │       │       │   │       └── in_memory_test.rb
-│   │       │       │   └── snapshot
-│   │       │       │       └── store
-│   │       │       │           └── in_memory_test.rb
-│   │       │       ├── reporting
-│   │       │       │   └── mismatch
-│   │       │       │       └── reporter
-│   │       │       │           └── in_memory_test.rb
-│   │       │       └── webhooks
-│   │       │           └── event_parser_test.rb
-│   │       ├── interfaces
-│   │       │   ├── payments
-│   │       │   │   └── client_test.rb
-│   │       │   ├── reconciliation
-│   │       │   │   └── client_test.rb
-│   │       │   ├── refunds
-│   │       │   │   └── client_test.rb
-│   │       │   └── webhooks
-│   │       │       └── client_test.rb
-│   │       ├── client_test.rb
-│   │       └── configuration_test.rb
-│   └── test_helper.rb
-├── Gemfile
-├── Gemfile.lock
-├── README.md
-├── Rakefile
-├── TREE.txt
-└── payment-sdk.gemspec
-
-129 directories, 97 files
+.                                                                   # Directorio raíz del proyecto Payment::SDK
+├── Gemfile                                                         # Definición de dependencias y versiones de gemas para Bundler
+├── Gemfile.lock                                                    # Árbol de resolución determinista de dependencias
+├── README.md                                                       # Documentación de arquitectura, guías de integración y ejemplos ejecutables
+├── Rakefile                                                        # Definición de tareas Rake para compilación y suite de pruebas Minitest
+├── TREE.txt                                                        # Árbol canónico documentado línea a línea con la responsabilidad de cada componente
+├── TREE_TEMPLATE.txt                                               # Arquetipo canónico de Clean Architecture para nuevos Bounded Contexts
+├── bin                                                             # Scripts y utilidades ejecutables de consola
+│   └── console                                                     # Consola interactiva IRB con entorno Payment::SDK precargado
+├── docs                                                            # Documentación técnica, arquitectónica y guías estratégicas
+│   ├── ARCHITECTURE.md                                             # Especificación técnica de Clean Architecture y Bounded Contexts
+│   └── roadmap                                                     # Planes de evolución, migración y actas de diseño
+│       ├── 001-architecture_normalization_and_bounded_contexts.md  # Roadmap inicial de diseño e introducción de Bounded Contexts
+│       └── 002-context_first_normalization_and_audit.md            # Roadmap estratégico de reorganización Context-First y release
+├── lib                                                             # Directorio principal de código fuente de la gema
+│   ├── payment                                                     # Namespace principal de pagos
+│   │   ├── sdk                                                     # Módulo principal del SDK conteniendo Bounded Contexts e Infraestructura
+│   │   │   ├── client.rb                                           # Fachada Client orquestadora de sub-clientes por Bounded Context
+│   │   │   ├── configuration.rb                                    # Gestor de configuración (credenciales, base_uri, timeouts)
+│   │   │   ├── errors.rb                                           # Jerarquía unificada de excepciones de negocio y de red
+│   │   │   ├── infrastructure                                      # Capa de Infraestructura y adaptadores conducidos (Driven / Secondary)
+│   │   │   │   └── adapters                                        # Implementaciones técnicas concretas de los puertos del dominio
+│   │   │   │       ├── crypto                                      # Adaptadores criptográficos y de seguridad
+│   │   │   │       │   └── signature                               # Adaptadores para cálculo y verificación de firmas
+│   │   │   │       │       └── verifier                            # Implementaciones concretas de verificación de firmas
+│   │   │   │       │           └── hmac_sha256.rb                  # Verificador HMAC-SHA256 con comparación en tiempo constante
+│   │   │   │       ├── http                                        # Adaptadores para transporte y comunicación HTTP
+│   │   │   │       │   ├── client                                  # Implementaciones concretas de clientes HTTP
+│   │   │   │       │   │   └── net_http.rb                         # Cliente HTTP basado en Net::HTTP estándar con reintentos exponenciales
+│   │   │   │       │   └── error_mapper.rb                         # Mapeador de códigos HTTP (400-500) a excepciones tipadas del dominio
+│   │   │   │       ├── persistence                                 # Adaptadores de almacenamiento y persistencia técnica
+│   │   │   │       │   ├── inbox                                   # Almacén para el patrón Transactional Inbox de Webhooks
+│   │   │   │       │   │   └── store                               # Implementaciones concretas del puerto Inbox::Store
+│   │   │   │       │   │       └── in_memory.rb                    # Almacén en memoria thread-safe para deduplicación de webhooks
+│   │   │   │       │   └── snapshot                                # Almacén de capturas de estado contable para conciliación
+│   │   │   │       │       └── store                               # Implementaciones concretas del puerto Snapshot::Store
+│   │   │   │       │           └── in_memory.rb                    # Almacén en memoria de snapshots transaccionales para conciliación
+│   │   │   │       ├── reporting                                   # Adaptadores de reporting y emisión de discrepancias
+│   │   │   │       │   └── mismatch                                # Gestión de reportes de diferencias financieras
+│   │   │   │       │       └── reporter                            # Implementaciones concretas del puerto Mismatch::Reporter
+│   │   │   │       │           └── in_memory.rb                    # Reportero en memoria de discrepancias detectadas en conciliación
+│   │   │   │       └── webhooks                                    # Adaptadores auxiliares para procesamiento de webhooks
+│   │   │   │           └── event_parser.rb                         # Parser seguro de payloads crudos a entidades WebhookEvent
+│   │   │   ├── payments                                            # Bounded Context: Pagos, cobros y transacciones primarias
+│   │   │   │   ├── application                                     # Capa de aplicación del Bounded Context Payments
+│   │   │   │   │   ├── commands                                    # Comandos de mutación de pagos (CQS Write)
+│   │   │   │   │   │   └── intents                                 # Comandos específicos para el agregado PaymentIntent
+│   │   │   │   │   │       ├── capture.rb                          # Comando para capturar fondos de un intento de pago previamente autorizado
+│   │   │   │   │   │       ├── confirm.rb                          # Comando para confirmar un intento de pago con método suministrado
+│   │   │   │   │   │       └── create.rb                           # Comando para inicializar un nuevo PaymentIntent con clave de idempotencia
+│   │   │   │   │   └── queries                                     # Consultas de solo lectura de pagos (CQS Read)
+│   │   │   │   │       ├── attempts                                # Consultas sobre el historial de intentos de cobro
+│   │   │   │   │       │   └── get.rb                              # Consulta de intentos de procesamiento asociados a un PaymentIntent
+│   │   │   │   │       ├── charges                                 # Consultas sobre transacciones de cargo asentadas
+│   │   │   │   │       │   └── get.rb                              # Consulta para recuperar el estado y montos capturados de un Charge
+│   │   │   │   │       ├── intents                                 # Consultas sobre el estado de intenciones de pago
+│   │   │   │   │       │   └── get.rb                              # Consulta para recuperar un PaymentIntent individual por ID
+│   │   │   │   │       └── lifecycles                              # Consultas agregadas del ciclo de vida integral del pago
+│   │   │   │   │           └── get.rb                              # Consulta agregada del ciclo de vida (PaymentIntent, Charges, Attempts)
+│   │   │   │   ├── domain                                          # Capa de dominio del Bounded Context Payments (Reglas puras)
+│   │   │   │   │   └── entities                                    # Entidades y agregados del dominio de pagos
+│   │   │   │   │       ├── charge.rb                               # Entidad Charge con invariantes de monto, estados y montos capturados
+│   │   │   │   │       ├── payment_attempt.rb                      # Entidad PaymentAttempt con estados inmutables como Symbols
+│   │   │   │   │       └── payment_intent.rb                       # Agregado raíz PaymentIntent con máquina de estados finita y predicados
+│   │   │   │   └── interfaces                                      # Capa de interfaces para consumo del Bounded Context Payments
+│   │   │   │       └── client.rb                                   # Sub-cliente de pagos expuesto en Payment::SDK::Client#payments
+│   │   │   ├── reconciliation                                      # Bounded Context: Conciliación de saldos y auditoría financiera
+│   │   │   │   ├── application                                     # Capa de aplicación del Bounded Context Reconciliation
+│   │   │   │   │   ├── queries                                     # Consultas de lectura contable y discrepancias
+│   │   │   │   │   │   ├── reports                                 # Consultas sobre reportes generados de discrepancias
+│   │   │   │   │   │   │   └── get.rb                              # Consulta para recuperar informes de conciliación y desajustes de saldo
+│   │   │   │   │   │   └── snapshots                               # Consultas sobre capturas históricas de transacciones
+│   │   │   │   │   │       └── get.rb                              # Consulta para recuperar snapshots históricos de conciliación
+│   │   │   │   │   └── use_cases                                   # Casos de uso coordinadores del proceso de conciliación
+│   │   │   │   │       └── reconcile.rb                            # Caso de uso que contrasta snapshots remotos vs internos y reporta fallas
+│   │   │   │   ├── domain                                          # Capa de dominio del Bounded Context Reconciliation
+│   │   │   │   │   └── ports                                       # Puertos conducidos requeridos por la conciliación
+│   │   │   │   │       ├── mismatch                                # Definición del puerto de notificación de discrepancias
+│   │   │   │   │       │   └── reporter.rb                         # Contrato abstracto de reportería de inconsistencias contables
+│   │   │   │   │       └── snapshot                                # Definición del puerto de recuperación de snapshots
+│   │   │   │   │           └── store.rb                            # Contrato abstracto para consultar snapshots históricos de transacciones
+│   │   │   │   └── interfaces                                      # Capa de interfaces del Bounded Context Reconciliation
+│   │   │   │       └── client.rb                                   # Sub-cliente expuesto en Payment::SDK::Client#reconciliation
+│   │   │   ├── refunds                                             # Bounded Context: Reembolsos totales y parciales
+│   │   │   │   ├── application                                     # Capa de aplicación del Bounded Context Refunds
+│   │   │   │   │   ├── commands                                    # Comandos de mutación para emitir reembolsos
+│   │   │   │   │   │   └── create.rb                               # Comando para crear un reembolso validando IdempotencyKey e invariantes
+│   │   │   │   │   └── queries                                     # Consultas de solo lectura de reembolsos
+│   │   │   │   │       └── get.rb                                  # Consulta para recuperar el estado y detalle de un Refund por ID
+│   │   │   │   ├── domain                                          # Capa de dominio del Bounded Context Refunds
+│   │   │   │   │   └── entities                                    # Entidades de dominio para devoluciones
+│   │   │   │   │       └── refund.rb                               # Entidad Refund con estados tipados a Symbols (:succeeded, :failed, :pending)
+│   │   │   │   └── interfaces                                      # Capa de interfaces para reembolsos
+│   │   │   │       └── client.rb                                   # Sub-cliente de reembolsos expuesto en Payment::SDK::Client#refunds
+│   │   │   ├── shared                                              # Shared Kernel: Conceptos y utilidades compartidas entre contextos
+│   │   │   │   ├── application                                     # Clases base y contratos de la capa de aplicación
+│   │   │   │   │   ├── base_command.rb                             # Comando base abstracto con validación de IdempotencyKey y protocolo #call
+│   │   │   │   │   └── base_query.rb                               # Consulta base abstracta con inyección de HttpClient y protocolo #call
+│   │   │   │   └── domain                                          # Dominio compartido por los Bounded Contexts
+│   │   │   │       ├── ports                                       # Puertos genéricos utilizados transversalmente
+│   │   │   │       │   └── http                                    # Definición del puerto de transporte HTTP
+│   │   │   │       │       └── client.rb                           # Contrato abstracto del cliente HTTP para desacoplar el transporte de red
+│   │   │   │       └── value_objects                               # Objetos de valor inmutables universales del dominio
+│   │   │   │           ├── currency.rb                             # Value Object para validación estricta de divisas según ISO 4217
+│   │   │   │           ├── idempotency_key.rb                      # Value Object para garantizar unicidad e inmutabilidad en claves idempotentes
+│   │   │   │           └── money.rb                                # Value Object monetario para cálculos exactos en centavos enteros
+│   │   │   ├── version.rb                                          # Declaración oficial de la versión semántica de la gema
+│   │   │   └── webhooks                                            # Bounded Context: Ingesta, validación y despacho de webhooks
+│   │   │       ├── application                                     # Capa de aplicación del Bounded Context Webhooks
+│   │   │       │   └── use_cases                                   # Casos de uso para procesamiento de webhooks
+│   │   │       │       └── process.rb                              # Caso de uso que coordina verificación de firma, deduplicación y parsing
+│   │   │       ├── domain                                          # Capa de dominio del Bounded Context Webhooks
+│   │   │       │   ├── entities                                    # Entidades y DTOs del dominio de webhooks
+│   │   │       │   │   └── webhook_event.rb                        # Entidad inmutable Data.define para representar eventos entrantes normalizados
+│   │   │       │   └── ports                                       # Puertos conducidos requeridos para la ingestión de webhooks
+│   │   │       │       ├── inbox                                   # Definición del puerto de almacenamiento de Transactional Inbox
+│   │   │       │       │   └── store.rb                            # Contrato abstracto para deduplicación idempotente de mensajes de webhook
+│   │   │       │       └── signature                               # Definición del puerto de verificación de autenticidad de webhook
+│   │   │       │           └── verifier.rb                         # Contrato abstracto para verificar firmas digitales en payloads de red
+│   │   │       └── interfaces                                      # Capa de interfaces para consumo del Bounded Context Webhooks
+│   │   │           └── client.rb                                   # Sub-cliente de webhooks expuesto en Payment::SDK::Client#webhooks
+│   │   └── sdk.rb                                                  # Cargador del SDK, namespaces y configuración central
+│   └── payment-sdk.rb                                              # Entrypoint canónico para Bundler y RubyGems
+├── payment-sdk.gemspec                                             # Especificación de la gema, metadatos, archivos y dependencias de runtime
+└── test                                                            # Directorio raíz de la suite de pruebas unitarias y de integración
+    ├── payment                                                     # Namespace de pruebas de la arquitectura del SDK
+    │   └── sdk                                                     # Pruebas unitarias de componentes del SDK
+    │       ├── client_test.rb                                      # Pruebas de la fachada Client y verificación de montaje de sub-clientes
+    │       ├── configuration_test.rb                               # Pruebas de inicialización, valores predeterminados e inmutabilidad de configuración
+    │       ├── infrastructure                                      # Pruebas de adaptadores técnicos de infraestructura
+    │       │   └── adapters                                        # Pruebas de implementaciones de puertos conducidos
+    │       │       ├── crypto                                      # Pruebas de utilidades criptográficas
+    │       │       │   └── signature                               # Pruebas de adaptadores de firmas
+    │       │       │       └── verifier                            # Pruebas de verificadores de firma
+    │       │       │           └── hmac_sha256_test.rb             # Pruebas de verificación HMAC-SHA256, firmas inválidas y timing safety
+    │       │       ├── http                                        # Pruebas de adaptadores de red HTTP
+    │       │       │   ├── client                                  # Pruebas de implementaciones de cliente HTTP
+    │       │       │   │   └── net_http_test.rb                    # Pruebas de Net::HTTP con stubs, reintentos exponenciales y manejo de timeouts
+    │       │       │   └── error_mapper_test.rb                    # Pruebas de mapeo exhaustivo de respuestas de error HTTP a errores del SDK
+    │       │       ├── persistence                                 # Pruebas de adaptadores de persistencia
+    │       │       │   ├── inbox                                   # Pruebas de almacenamiento de inbox de webhooks
+    │       │       │   │   └── store                               # Pruebas de stores de deduplicación
+    │       │       │   │       └── in_memory_test.rb               # Pruebas de idempotencia, concurrencia y actualización de estados en memoria
+    │       │       │   └── snapshot                                # Pruebas de almacenamiento de snapshots
+    │       │       │       └── store                               # Pruebas de stores de snapshots
+    │       │       │           └── in_memory_test.rb               # Pruebas de almacenamiento y consulta de snapshots en memoria
+    │       │       ├── reporting                                   # Pruebas de adaptadores de reporte
+    │       │       │   └── mismatch                                # Pruebas de reporte de discrepancias
+    │       │       │       └── reporter                            # Pruebas de reporteros de inconsistencias
+    │       │       │           └── in_memory_test.rb               # Pruebas de recolección en memoria de desajustes contables
+    │       │       └── webhooks                                    # Pruebas de adaptadores auxiliares de webhook
+    │       │           └── event_parser_test.rb                    # Pruebas de parsing y extracción de datos tipados desde JSON
+    │       ├── payments                                            # Pruebas del Bounded Context Payments
+    │       │   ├── application                                     # Pruebas de casos de uso y comandos de pagos
+    │       │   │   ├── commands                                    # Pruebas de comandos de pagos
+    │       │   │   │   └── intents                                 # Pruebas de comandos de PaymentIntent
+    │       │   │   │       ├── capture_test.rb                     # Pruebas del comando de captura con clave de idempotencia y validación de respuesta
+    │       │   │   │       ├── confirm_test.rb                     # Pruebas del comando de confirmación de pago y transición de estado
+    │       │   │   │       └── create_test.rb                      # Pruebas del comando de creación de PaymentIntent con parámetros y headers
+    │       │   │   └── queries                                     # Pruebas de consultas de lectura de pagos
+    │       │   │       ├── attempts                                # Pruebas de consultas de intentos
+    │       │   │       │   └── get_test.rb                         # Pruebas de recuperación y deserialización de historial de intentos de pago
+    │       │   │       ├── charges                                 # Pruebas de consultas de cargos
+    │       │   │       │   └── get_test.rb                         # Pruebas de consulta de cargos asociados y montos capturados
+    │       │   │       ├── intents                                 # Pruebas de consultas de intents
+    │       │   │       │   └── get_test.rb                         # Pruebas de recuperación de PaymentIntent por identificador
+    │       │   │       └── lifecycles                              # Pruebas de consultas agregadas del ciclo de vida
+    │       │   │           └── get_test.rb                         # Pruebas de vista unificada de PaymentIntent, Charges y Attempts
+    │       │   ├── domain                                          # Pruebas de la capa de dominio de pagos
+    │       │   │   └── entities                                    # Pruebas de entidades de pagos
+    │       │   │       ├── charge_test.rb                          # Pruebas de cálculo de capturas y predicados en la entidad Charge
+    │       │   │       ├── payment_attempt_test.rb                 # Pruebas de predicados y normalización a Symbols en PaymentAttempt
+    │       │   │       └── payment_intent_test.rb                  # Pruebas de máquina de estados y símbolos en PaymentIntent
+    │       │   └── interfaces                                      # Pruebas de interfaces de pagos
+    │       │       └── client_test.rb                              # Pruebas de integración del sub-cliente payments contra stubs HTTP
+    │       ├── reconciliation                                      # Pruebas del Bounded Context Reconciliation
+    │       │   ├── application                                     # Pruebas de aplicación de conciliación
+    │       │   │   ├── queries                                     # Pruebas de consultas de conciliación
+    │       │   │   │   ├── reports                                 # Pruebas de consultas de reportes
+    │       │   │   │   │   └── get_test.rb                         # Pruebas de consulta de reportes de inconsistencia financiera
+    │       │   │   │   └── snapshots                               # Pruebas de consultas de snapshots
+    │       │   │   │       └── get_test.rb                         # Pruebas de consulta de capturas históricas de transacciones
+    │       │   │   └── use_cases                                   # Pruebas de casos de uso de conciliación
+    │       │   │       └── reconcile_test.rb                       # Pruebas del caso de uso de conciliación contrastando datos remotos vs locales
+    │       │   ├── domain                                          # Pruebas del dominio de conciliación
+    │       │   │   └── ports                                       # Pruebas de contratos de puertos de conciliación
+    │       │   │       ├── mismatch                                # Pruebas del puerto de reporte de desajustes
+    │       │   │       │   └── reporter_test.rb                    # Pruebas del contrato abstracto Mismatch::Reporter
+    │       │   │       └── snapshot                                # Pruebas del puerto de almacenamiento de snapshots
+    │       │   │           └── store_test.rb                       # Pruebas del contrato abstracto Snapshot::Store
+    │       │   └── interfaces                                      # Pruebas de interfaces de conciliación
+    │       │       └── client_test.rb                              # Pruebas de invocación del sub-cliente reconciliation
+    │       ├── refunds                                             # Pruebas del Bounded Context Refunds
+    │       │   ├── application                                     # Pruebas de aplicación de reembolsos
+    │       │   │   ├── commands                                    # Pruebas de comandos de reembolsos
+    │       │   │   │   └── create_test.rb                          # Pruebas del comando de emisión de reembolso y verificación de parámetros
+    │       │   │   └── queries                                     # Pruebas de consultas de reembolsos
+    │       │   │       └── get_test.rb                             # Pruebas de recuperación y deserialización de un Refund por ID
+    │       │   ├── domain                                          # Pruebas del dominio de reembolsos
+    │       │   │   └── entities                                    # Pruebas de entidades de reembolsos
+    │       │   │       └── refund_test.rb                          # Pruebas de inicialización, congelación y símbolos en Refund
+    │       │   └── interfaces                                      # Pruebas de interfaces de reembolsos
+    │       │       └── client_test.rb                              # Pruebas de invocación y delegación del sub-cliente refunds
+    │       ├── shared                                              # Pruebas del Shared Kernel
+    │       │   ├── application                                     # Pruebas de clases base de aplicación
+    │       │   │   ├── base_command_test.rb                        # Pruebas de validación de IdempotencyKey y contrato abstracto #call
+    │       │   │   └── base_query_test.rb                          # Pruebas de contrato abstracto #call en consultas de lectura
+    │       │   └── domain                                          # Pruebas del dominio compartido
+    │       │       ├── ports                                       # Pruebas de puertos compartidos
+    │       │       │   └── http                                    # Pruebas de contratos HTTP compartidos
+    │       │       │       └── client_test.rb                      # Pruebas de contrato abstracto HttpClient
+    │       │       └── value_objects                               # Pruebas de Value Objects compartidos
+    │       │           ├── currency_test.rb                        # Pruebas de validación estricta de divisas según ISO 4217
+    │       │           ├── idempotency_key_test.rb                 # Pruebas de invariantes y formato en claves de idempotencia
+    │       │           └── money_test.rb                           # Pruebas de operaciones aritméticas e inmutabilidad en Money
+    │       └── webhooks                                            # Pruebas del Bounded Context Webhooks
+    │           ├── application                                     # Pruebas de aplicación de webhooks
+    │           │   └── use_cases                                   # Pruebas de casos de uso de webhooks
+    │           │       └── process_test.rb                         # Pruebas del pipeline completo de validación de firma, inbox y parsing
+    │           ├── domain                                          # Pruebas del dominio de webhooks
+    │           │   ├── entities                                    # Pruebas de entidades de webhooks
+    │           │   │   └── webhook_event_test.rb                   # Pruebas de acceso a atributos de eventos mediante Data.define
+    │           │   └── ports                                       # Pruebas de contratos de puertos de webhooks
+    │           │       ├── inbox                                   # Pruebas de puerto de inbox
+    │           │       │   └── store_test.rb                       # Pruebas del contrato abstracto Inbox::Store
+    │           │       └── signature                               # Pruebas de puerto de firmas
+    │           │           └── verifier_test.rb                    # Pruebas del contrato abstracto Signature::Verifier
+    │           └── interfaces                                      # Pruebas de interfaces de webhooks
+    │               └── client_test.rb                              # Pruebas de invocación del sub-cliente webhooks
+    └── test_helper.rb                                              # Configuración global de suite de pruebas Minitest y carga del entorno

@@ -1,0 +1,68 @@
+# ==============================================================================
+# ARCHETYPE TEMPLATE: BOUNDED CONTEXT IN CLEAN ARCHITECTURE (CONTEXT-FIRST)
+# ==============================================================================
+# Este arquetipo define la estructura canónica y las responsabilidades obligatorias
+# para cualquier nuevo Bounded Context (ej. subscriptions, disputes, payouts)
+# que se incorpore a la gema Payment::SDK.
+#
+# Principios Clave:
+# 1. Context-First: Todo el contexto vive en su propia jerarquía autónoma.
+# 2. Inversión de Dependencias: Domain no depende de nadie; Application orquesta
+#    Domain y Puertos; Interfaces expone la API pública al Client; Infrastructure
+#    implementa los adaptadores técnicos conducidos (Driven / Secondary).
+# 3. Protocolo Idiomático #call: Todos los Commands, Queries y Use Cases implementan #call.
+# 4. Estados como Symbols: Las entidades modelan estados como Symbols inmutables.
+# ==============================================================================
+
+<context>/
+├── application/                               # [Capa de Aplicación] Casos de uso y orquestación de negocio
+│   ├── commands/                              # Comandos de mutación de estado (CQS - Write)
+│   │   └── <entity_or_feature>/               # Agrupación por entidad o flujo funcional
+│   │       ├── create.rb                      # Comando para crear el recurso; hereda de BaseCommand; valida IdempotencyKey
+│   │       ├── update.rb                      # Comando para modificar el recurso; valida idempotencia si muta balance/estado
+│   │       └── cancel.rb                      # Comando para cancelar/cerrar recurso; orquesta puertos HTTP o de persistencia
+│   ├── queries/                               # Consultas de lectura pura sin efectos secundarios (CQS - Read)
+│   │   └── <entity_or_feature>/               # Agrupación por entidad o flujo funcional
+│   │       ├── get.rb                         # Consulta individual por ID; hereda de BaseQuery; retorna Entidad o DTO Data
+│   │       └── list.rb                        # Consulta paginada o con filtros de búsqueda; retorna colección de Entidades/DTOs
+│   └── use_cases/                             # Flujos de orquestación complejos que coordinan múltiples puertos o eventos
+│       └── process_<workflow>.rb              # Orquesta verificación de firmas, deduplicación en inbox y transición de dominio
+│
+├── domain/                                    # [Capa de Dominio] Reglas de negocio puras, invariantes y contratos (Zero external deps)
+│   ├── entities/                              # Entidades y Agregados del Bounded Context
+│   │   └── <entity>.rb                        # Entidad principal (Class con métodos de negocio y estados como Symbols)
+│   ├── ports/                                 # Interfaces abstractas que el dominio requiere (Hexagonal / Clean Architecture)
+│   │   ├── <gateway_or_storage>/              # Puerto secundario / conducido requerido por el dominio
+│   │   │   └── store.rb                       # Contrato abstracto (raise NotImplementedError en métodos de persistencia)
+│   │   └── <verifier_or_notifier>/            # Puerto de validación criptográfica o comunicación
+│   │       └── verifier.rb                    # Contrato abstracto (raise NotImplementedError en métodos de verificación)
+│   └── value_objects/                         # Value Objects específicos del contexto (inmutables, igualdad por valor)
+│       └── <domain_descriptor>.rb             # Value Object validado en inicializador (o Data.define)
+│
+└── interfaces/                                # [Capa de Interfaces] Punto de entrada del contexto para el cliente raíz o API
+    └── client.rb                              # Sub-cliente del Bounded Context montado en Payment::SDK::Client
+
+# ------------------------------------------------------------------------------
+# ESTRUCTURA ESPEJO EN TESTS (test/payment/sdk/<context>/)
+# ------------------------------------------------------------------------------
+test/payment/sdk/<context>/
+├── application/                               # Tests unitarios de comandos, queries y casos de uso
+│   ├── commands/
+│   │   └── <entity_or_feature>/
+│   │       ├── create_test.rb                 # Valida headers de idempotencia, mapeo de respuesta y manejo de excepciones
+│   │       └── ...
+│   ├── queries/
+│   │   └── <entity_or_feature>/
+│   │       ├── get_test.rb                    # Valida queries de lectura, parsing y errores 404/Not Found
+│   │       └── ...
+│   └── use_cases/
+│       └── process_<workflow>_test.rb         # Valida pipeline completo con dobles de prueba (Mocks/Stubs de puertos)
+├── domain/                                    # Tests unitarios puros de lógica de dominio (sin I/O ni red)
+│   ├── entities/
+│   │   └── <entity>_test.rb                   # Valida invariantes, transiciones, predicados booleanos y símbolos de estado
+│   ├── ports/
+│   │   └── ..._test.rb                        # Valida que los puertos base lancen NotImplementedError
+│   └── value_objects/
+│       └── ..._test.rb                        # Valida igualdad estructural, inmutabilidad y validaciones de formato
+└── interfaces/
+    └── client_test.rb                         # Valida delegación fluida del sub-cliente hacia commands y queries con #call

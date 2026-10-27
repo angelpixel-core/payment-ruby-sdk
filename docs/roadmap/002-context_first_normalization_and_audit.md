@@ -150,8 +150,8 @@ graph TD
 ---
 
 ### Fase 4: Documentación Canónica: `TREE.txt` y `TREE_TEMPLATE.txt`
-- [ ] **4.1** Generar `TREE.txt` anotando **cada línea** con un comentario `#` perfectamente alineado indicando su responsabilidad arquitectónica única.
-- [ ] **4.2** Crear `TREE_TEMPLATE.txt` con el arquetipo exhaustivo de un Bounded Context en Clean Architecture (detallando capas, nombres sugeridos y responsabilidades de cada componente para futuros módulos).
+- [x] **4.1** Generar `TREE.txt` anotando **cada línea** con un comentario `#` perfectamente alineado indicando su responsabilidad arquitectónica única.
+- [x] **4.2** Crear `TREE_TEMPLATE.txt` con el arquetipo exhaustivo de un Bounded Context en Clean Architecture (detallando capas, nombres sugeridos y responsabilidades de cada componente para futuros módulos).
 
 ---
 
