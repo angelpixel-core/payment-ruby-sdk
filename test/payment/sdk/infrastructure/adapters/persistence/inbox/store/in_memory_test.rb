@@ -34,4 +34,14 @@ class InfrastructureAdaptersPersistenceInboxStoreInMemoryTest < Minitest::Test
     assert_equal :processed, updated[:status]
     assert_equal :processed, @store.find_by_delivery_id("del_1")[:status]
   end
+
+  def test_save_and_update_status
+    entry = { delivery_id: "del_2", raw_payload: "{}", status: :received }
+    @store.save(entry)
+
+    @store.update_status(delivery_id: "del_2", status: :failed, failure_reason: "err")
+    found = @store.find_by_delivery_id("del_2")
+    assert_equal :failed, found[:status]
+    assert_equal "err", found[:failure_reason]
+  end
 end

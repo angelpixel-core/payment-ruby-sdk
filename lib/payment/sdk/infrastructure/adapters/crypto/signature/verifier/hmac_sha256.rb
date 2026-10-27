@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "openssl"
-require "payment/sdk/domain/webhooks/ports/signature/verifier"
+require "payment/sdk/webhooks/domain/ports/signature/verifier"
 require "payment/sdk/errors"
 
 module Payment
@@ -12,7 +12,7 @@ module Payment
           module Signature
             module Verifier
               class HmacSha256
-                include Payment::SDK::Domain::Webhooks::Ports::Signature::Verifier
+                include Payment::SDK::Webhooks::Domain::Ports::Signature::Verifier
 
                 def verify(payload:, signature:, secret:, timestamp_tolerance: 300)
                   raise Payment::SDK::SignatureVerificationError, "Missing signature" if signature.nil? || signature.to_s.strip.empty?

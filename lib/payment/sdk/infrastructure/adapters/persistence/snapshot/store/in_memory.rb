@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "payment/sdk/domain/reconciliation/ports/snapshot/store"
+require "payment/sdk/reconciliation/domain/ports/snapshot/store"
 require "thread"
 
 module Payment
@@ -11,7 +11,7 @@ module Payment
           module Snapshot
             module Store
               class InMemory
-                include Domain::Reconciliation::Ports::Snapshot::Store
+                include Reconciliation::Domain::Ports::Snapshot::Store
 
                 def initialize
                   @store = {}

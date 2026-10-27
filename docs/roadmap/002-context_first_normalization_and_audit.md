@@ -88,37 +88,37 @@ graph TD
 ## 3. Fases de Ejecución Detalladas (Checklist de Tareas)
 
 ### Fase 1: Reorganización Context-First en `lib/` y `test/`
-- [ ] **1.1 Bounded Context `payments`**:
-  - [ ] Mover dominio: `lib/payment/sdk/payments/domain/entities/{payment_intent,payment_attempt,charge}.rb`.
-  - [ ] Mover aplicación: `lib/payment/sdk/payments/application/commands/intents/` y `queries/{intents,charges,attempts,lifecycles}/`.
-  - [ ] Mover interfaz: `lib/payment/sdk/payments/interfaces/client.rb`.
-  - [ ] Mover tests espejo: `test/payment/sdk/payments/{domain,application,interfaces}/`.
-- [ ] **1.2 Bounded Context `refunds`**:
-  - [ ] Mover dominio: `lib/payment/sdk/refunds/domain/entities/refund.rb`.
-  - [ ] Mover aplicación: `lib/payment/sdk/refunds/application/commands/create.rb` y `queries/get.rb`.
-  - [ ] Mover interfaz: `lib/payment/sdk/refunds/interfaces/client.rb`.
-  - [ ] Mover tests espejo: `test/payment/sdk/refunds/{domain,application,interfaces}/`.
-- [ ] **1.3 Bounded Context `webhooks`**:
-  - [ ] Mover dominio: `lib/payment/sdk/webhooks/domain/entities/webhook_event.rb` y `ports/{inbox/store,signature/verifier}.rb`.
-  - [ ] Mover aplicación: `lib/payment/sdk/webhooks/application/use_cases/process.rb`.
-  - [ ] Mover interfaz: `lib/payment/sdk/webhooks/interfaces/client.rb`.
-  - [ ] Mover tests espejo: `test/payment/sdk/webhooks/{domain,application,interfaces}/`.
-- [ ] **1.4 Bounded Context `reconciliation`**:
-  - [ ] Mover dominio: `lib/payment/sdk/reconciliation/domain/ports/{snapshot/store,mismatch/reporter}.rb`.
-  - [ ] Mover aplicación: `lib/payment/sdk/reconciliation/application/use_cases/reconcile.rb` y `queries/{reports,snapshots}/`.
-  - [ ] Mover interfaz: `lib/payment/sdk/reconciliation/interfaces/client.rb`.
-  - [ ] Mover tests espejo: `test/payment/sdk/reconciliation/{domain,application,interfaces}/`.
-- [ ] **1.5 Shared Kernel**:
-  - [ ] Mover dominio compartido: `lib/payment/sdk/shared/domain/value_objects/` y `ports/http/client.rb`.
-  - [ ] Mover aplicación compartida: `lib/payment/sdk/shared/application/{base_command,base_query}.rb`.
-  - [ ] Mover tests espejo: `test/payment/sdk/shared/{domain,application}/`.
-- [ ] **1.6 Adaptadores Secundarios**:
-  - [ ] Consolidar adaptadores conducidos en `lib/payment/sdk/infrastructure/adapters/`.
-  - [ ] Consolidar tests en `test/payment/sdk/infrastructure/adapters/`.
-- [ ] **1.7 Actualizar Fachada Raíz**:
-  - [ ] Actualizar `lib/payment/sdk/client.rb` con las nuevas rutas de requires y namespaces.
-- [ ] **1.8 Validación**:
-  - [ ] Ejecutar `bundle exec rake test` (100% verde).
+- [x] **1.1 Bounded Context `payments`**:
+  - [x] Mover dominio: `lib/payment/sdk/payments/domain/entities/{payment_intent,payment_attempt,charge}.rb`.
+  - [x] Mover aplicación: `lib/payment/sdk/payments/application/commands/intents/` y `queries/{intents,charges,attempts,lifecycles}/`.
+  - [x] Mover interfaz: `lib/payment/sdk/payments/interfaces/client.rb`.
+  - [x] Mover tests espejo: `test/payment/sdk/payments/{domain,application,interfaces}/`.
+- [x] **1.2 Bounded Context `refunds`**:
+  - [x] Mover dominio: `lib/payment/sdk/refunds/domain/entities/refund.rb`.
+  - [x] Mover aplicación: `lib/payment/sdk/refunds/application/commands/create.rb` y `queries/get.rb`.
+  - [x] Mover interfaz: `lib/payment/sdk/refunds/interfaces/client.rb`.
+  - [x] Mover tests espejo: `test/payment/sdk/refunds/{domain,application,interfaces}/`.
+- [x] **1.3 Bounded Context `webhooks`**:
+  - [x] Mover dominio: `lib/payment/sdk/webhooks/domain/entities/webhook_event.rb` y `ports/{inbox/store,signature/verifier}.rb`.
+  - [x] Mover aplicación: `lib/payment/sdk/webhooks/application/use_cases/process.rb`.
+  - [x] Mover interfaz: `lib/payment/sdk/webhooks/interfaces/client.rb`.
+  - [x] Mover tests espejo: `test/payment/sdk/webhooks/{domain,application,interfaces}/`.
+- [x] **1.4 Bounded Context `reconciliation`**:
+  - [x] Mover dominio: `lib/payment/sdk/reconciliation/domain/ports/{snapshot/store,mismatch/reporter}.rb`.
+  - [x] Mover aplicación: `lib/payment/sdk/reconciliation/application/use_cases/reconcile.rb` y `queries/{reports,snapshots}/`.
+  - [x] Mover interfaz: `lib/payment/sdk/reconciliation/interfaces/client.rb`.
+  - [x] Mover tests espejo: `test/payment/sdk/reconciliation/{domain,application,interfaces}/`.
+- [x] **1.5 Shared Kernel**:
+  - [x] Mover dominio compartido: `lib/payment/sdk/shared/domain/value_objects/` y `ports/http/client.rb`.
+  - [x] Mover aplicación compartida: `lib/payment/sdk/shared/application/{base_command,base_query}.rb`.
+  - [x] Mover tests espejo: `test/payment/sdk/shared/{domain,application}/`.
+- [x] **1.6 Adaptadores Secundarios**:
+  - [x] Consolidar adaptadores conducidos en `lib/payment/sdk/infrastructure/adapters/`.
+  - [x] Consolidar tests en `test/payment/sdk/infrastructure/adapters/`.
+- [x] **1.7 Actualizar Fachada Raíz**:
+  - [x] Actualizar `lib/payment/sdk/client.rb` con las nuevas rutas de requires y namespaces.
+- [x] **1.8 Validación**:
+  - [x] Ejecutar `bundle exec rake test` (100% verde).
 
 ---
 

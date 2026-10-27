@@ -6,10 +6,10 @@ require "payment/sdk/infrastructure/adapters/persistence/inbox/store/in_memory"
 require "payment/sdk/infrastructure/adapters/persistence/snapshot/store/in_memory"
 require "payment/sdk/infrastructure/adapters/reporting/mismatch/reporter/in_memory"
 
-require "payment/sdk/interfaces/payments/client"
-require "payment/sdk/interfaces/refunds/client"
-require "payment/sdk/interfaces/webhooks/client"
-require "payment/sdk/interfaces/reconciliation/client"
+require "payment/sdk/payments/interfaces/client"
+require "payment/sdk/refunds/interfaces/client"
+require "payment/sdk/webhooks/interfaces/client"
+require "payment/sdk/reconciliation/interfaces/client"
 
 module Payment
   module SDK
@@ -22,15 +22,15 @@ module Payment
       end
 
       def payments
-        @payments ||= Interfaces::Payments::Client.new(http_client)
+        @payments ||= Payments::Interfaces::Client.new(http_client)
       end
 
       def refunds
-        @refunds ||= Interfaces::Refunds::Client.new(http_client)
+        @refunds ||= Refunds::Interfaces::Client.new(http_client)
       end
 
       def webhooks
-        @webhooks ||= Interfaces::Webhooks::Client.new(
+        @webhooks ||= Webhooks::Interfaces::Client.new(
           secret: @config.signing_secret,
           inbox_store: default_inbox_store,
           verifier: signature_verifier
@@ -38,7 +38,7 @@ module Payment
       end
 
       def reconciliation
-        @reconciliation ||= Interfaces::Reconciliation::Client.new(
+        @reconciliation ||= Reconciliation::Interfaces::Client.new(
           http_client: http_client,
           snapshot_store: default_snapshot_store,
           mismatch_reporter: default_mismatch_reporter

@@ -3,7 +3,7 @@
 require "net/http"
 require "json"
 require "uri"
-require "payment/sdk/domain/shared/ports/http/client"
+require "payment/sdk/shared/domain/ports/http/client"
 require "payment/sdk/errors"
 require "payment/sdk/infrastructure/adapters/http/error_mapper"
 require "payment/sdk/version"
@@ -15,7 +15,7 @@ module Payment
         module Http
           module Client
             class NetHttp
-              include Payment::SDK::Domain::Shared::Ports::Http::Client
+              include Payment::SDK::Shared::Domain::Ports::Http::Client
 
               def initialize(base_url:, open_timeout: 30, read_timeout: 80, max_retries: 2)
                 @base_url = base_url.sub(%r{/$}, "")

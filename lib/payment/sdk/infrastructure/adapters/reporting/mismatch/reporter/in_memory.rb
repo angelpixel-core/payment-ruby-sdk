@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "payment/sdk/domain/reconciliation/ports/mismatch/reporter"
+require "payment/sdk/reconciliation/domain/ports/mismatch/reporter"
 require "thread"
 
 module Payment
@@ -11,7 +11,7 @@ module Payment
           module Mismatch
             module Reporter
               class InMemory
-                include Domain::Reconciliation::Ports::Mismatch::Reporter
+                include Reconciliation::Domain::Ports::Mismatch::Reporter
 
                 attr_reader :reports
 

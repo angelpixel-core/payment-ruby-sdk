@@ -2,7 +2,7 @@
 
 require "json"
 require "time"
-require "payment/sdk/domain/webhooks/entities/webhook_event"
+require "payment/sdk/webhooks/domain/entities/webhook_event"
 require "payment/sdk/errors"
 
 module Payment
@@ -30,12 +30,13 @@ module Payment
                 raise Payment::SDK::InvalidRequestError.new("Missing event_type in webhook payload")
               end
 
-              Payment::SDK::Domain::Webhooks::Entities::WebhookEvent.new(
+              Payment::SDK::Webhooks::Domain::Entities::WebhookEvent.new(
                 delivery_id: delivery_id,
                 event_id: event_id,
                 event_type: event_type,
                 data: parsed[:data],
-                created_at: parsed[:created_at] || Time.now.utc.iso8601
+                created_at: parsed[:created_at] || Time.now.utc.iso8601,
+                raw_payload: payload.is_a?(String) ? payload : JSON.generate(payload)
               )
             rescue JSON::ParserError => e
               raise Payment::SDK::InvalidRequestError.new("Invalid JSON payload: #{e.message}")

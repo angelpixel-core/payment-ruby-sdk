@@ -12,16 +12,16 @@ class ClientTest < Minitest::Test
   end
 
   def test_sub_clients_are_accessible_and_memoized
-    assert_instance_of Payment::SDK::Interfaces::Payments::Client, @client.payments
+    assert_instance_of Payment::SDK::Payments::Interfaces::Client, @client.payments
     assert_same @client.payments, @client.payments
 
-    assert_instance_of Payment::SDK::Interfaces::Refunds::Client, @client.refunds
+    assert_instance_of Payment::SDK::Refunds::Interfaces::Client, @client.refunds
     assert_same @client.refunds, @client.refunds
 
-    assert_instance_of Payment::SDK::Interfaces::Webhooks::Client, @client.webhooks
+    assert_instance_of Payment::SDK::Webhooks::Interfaces::Client, @client.webhooks
     assert_same @client.webhooks, @client.webhooks
 
-    assert_instance_of Payment::SDK::Interfaces::Reconciliation::Client, @client.reconciliation
+    assert_instance_of Payment::SDK::Reconciliation::Interfaces::Client, @client.reconciliation
     assert_same @client.reconciliation, @client.reconciliation
   end
 

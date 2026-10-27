@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "payment/sdk/domain/webhooks/ports/inbox/store"
+require "payment/sdk/webhooks/domain/ports/inbox/store"
 require "thread"
 
 module Payment
@@ -11,7 +11,7 @@ module Payment
           module Inbox
             module Store
               class InMemory
-                include Payment::SDK::Domain::Webhooks::Ports::Inbox::Store
+                include Payment::SDK::Webhooks::Domain::Ports::Inbox::Store
 
                 def initialize
                   @store = {}
@@ -35,6 +35,7 @@ module Payment
                     entry.dup
                   end
                 end
+                alias_method :save, :persist
 
                 def update(delivery_id, attributes)
                   @mutex.synchronize do
@@ -44,6 +45,12 @@ module Payment
                     entry.merge!(attributes)
                     entry.dup
                   end
+                end
+
+                def update_status(delivery_id:, status:, failure_reason: nil)
+                  attrs = { status: status }
+                  attrs[:failure_reason] = failure_reason if failure_reason
+                  update(delivery_id, attrs)
                 end
 
                 def clear!
