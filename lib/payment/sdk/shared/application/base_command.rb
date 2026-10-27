@@ -17,10 +17,6 @@ module Payment
             raise NotImplementedError, "#{self.class} must implement #call"
           end
 
-          def execute(**options)
-            call(**options)
-          end
-
           protected
 
           def normalize_idempotency_key(key)

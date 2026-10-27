@@ -123,22 +123,22 @@ graph TD
 ---
 
 ### Fase 2: Estandarización a `#call` y Normalización a Symbols
-- [ ] **2.1 Estandarización a `#call`**:
-  - [ ] `Shared::Application::BaseCommand`: definir método abstracto `#call(**opts)`.
-  - [ ] `Shared::Application::BaseQuery`: definir método abstracto `#call(**opts)`.
-  - [ ] Refactorizar todos los comandos de pagos y reembolsos a `def call(...)`.
-  - [ ] Refactorizar todas las queries de pagos, reembolsos y reconciliación a `def call(...)`.
-  - [ ] Actualizar invocaciones en sub-clientes (`Payments::Interfaces::Client`, `Refunds::Interfaces::Client`, etc.) para invocar `.call(...)`.
-  - [ ] Actualizar todos los tests unitarios correspondientes.
-- [ ] **2.2 Normalización a Symbols en Dominio**:
-  - [ ] `PaymentIntent`: normalizar `@status = status.to_sym` y métodos de consulta (`requires_capture?`, `succeeded?`, etc.).
-  - [ ] `PaymentAttempt`: normalizar `@status = status.to_sym`.
-  - [ ] `Charge`: normalizar `@status = status.to_sym`.
-  - [ ] `Refund`: normalizar `@status = status.to_sym`.
-  - [ ] Adaptadores HTTP y EventParser: asegurar conversión limpia de payloads remotos hacia el dominio.
-  - [ ] Actualizar assertions de tests para validar tipos de estado consistentes.
-- [ ] **2.3 Validación**:
-  - [ ] Ejecutar `bundle exec rake test` (100% verde sin advertencias).
+- [x] **2.1 Estandarización a `#call`**:
+  - [x] `Shared::Application::BaseCommand`: definir método abstracto `#call(**opts)`.
+  - [x] `Shared::Application::BaseQuery`: definir método abstracto `#call(**opts)`.
+  - [x] Refactorizar todos los comandos de pagos y reembolsos a `def call(...)`.
+  - [x] Refactorizar todas las queries de pagos, reembolsos y reconciliación a `def call(...)`.
+  - [x] Actualizar invocaciones en sub-clientes (`Payments::Interfaces::Client`, `Refunds::Interfaces::Client`, etc.) para invocar `.call(...)`.
+  - [x] Actualizar todos los tests unitarios correspondientes.
+- [x] **2.2 Normalización a Symbols en Dominio**:
+  - [x] `PaymentIntent`: normalizar `@status = status.to_sym` y métodos de consulta (`requires_capture?`, `succeeded?`, etc.).
+  - [x] `PaymentAttempt`: normalizar `@status = status.to_sym`.
+  - [x] `Charge`: normalizar `@status = status.to_sym`.
+  - [x] `Refund`: normalizar `@status = status.to_sym`.
+  - [x] Adaptadores HTTP y EventParser: asegurar conversión limpia de payloads remotos hacia el dominio.
+  - [x] Actualizar assertions de tests para validar tipos de estado consistentes.
+- [x] **2.3 Validación**:
+  - [x] Ejecutar `bundle exec rake test` (100% verde sin advertencias).
 
 ---
 

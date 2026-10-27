@@ -30,8 +30,5 @@ class SharedApplicationBaseQueryTest < Minitest::Test
     assert_equal({ queried: "123" }, result)
   end
 
-  def test_execute_alias_delegates_to_call
-    result = @query.execute(id: "123")
-    assert_equal({ queried: "123" }, result)
-  end
+
 end

@@ -41,8 +41,5 @@ class SharedApplicationBaseCommandTest < Minitest::Test
     assert_equal "vo-key", result_vo[:key]
   end
 
-  def test_execute_alias_delegates_to_call
-    result = @cmd.execute(idempotency_key: "exec-key")
-    assert_equal "exec-key", result[:key]
-  end
+
 end

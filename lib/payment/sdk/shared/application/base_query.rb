@@ -14,10 +14,6 @@ module Payment
           def call(**options)
             raise NotImplementedError, "#{self.class} must implement #call"
           end
-
-          def execute(**options)
-            call(**options)
-          end
         end
       end
     end
