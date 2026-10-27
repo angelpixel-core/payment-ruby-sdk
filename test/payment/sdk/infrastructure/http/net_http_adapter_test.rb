@@ -119,10 +119,15 @@ class NetHttpAdapterTest < Minitest::Test
   private
 
   def with_stubbed_http(http_stub)
-    original_method = Net::HTTP.method(:new)
-    Net::HTTP.define_singleton_method(:new) { |*args| http_stub }
+    orig = Net::HTTP.method(:new)
+    verbose = $VERBOSE
+    $VERBOSE = nil
+    Net::HTTP.define_singleton_method(:new) { |*| http_stub }
+    $VERBOSE = verbose
     yield
   ensure
-    Net::HTTP.define_singleton_method(:new, &original_method)
+    $VERBOSE = nil
+    Net::HTTP.define_singleton_method(:new, &orig)
+    $VERBOSE = verbose
   end
 end

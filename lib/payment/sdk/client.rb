@@ -21,6 +21,8 @@ require "payment/sdk/infrastructure/persistence/in_memory_inbox_store"
 require "payment/sdk/infrastructure/persistence/in_memory_snapshot_store"
 require "payment/sdk/infrastructure/reporting/in_memory_mismatch_reporter"
 
+require "payment/sdk/interfaces/payments/client"
+
 module Payment
   module SDK
     class Client
@@ -31,19 +33,20 @@ module Payment
         @config.validate!
       end
 
+      def payments
+        @payments ||= Interfaces::Payments::Client.new(http_client)
+      end
+
       def create_payment_intent(amount:, currency:, **opts)
-        cmd = Application::Commands::CreatePaymentIntent.new(http_client)
-        cmd.execute(amount: amount, currency: currency, **opts)
+        payments.intents.create(amount: amount, currency: currency, **opts)
       end
 
       def confirm_payment_intent(id, payment_method_token:, **opts)
-        cmd = Application::Commands::ConfirmPaymentIntent.new(http_client)
-        cmd.execute(id: id, payment_method_token: payment_method_token, **opts)
+        payments.intents.confirm(id, payment_method_token: payment_method_token, **opts)
       end
 
       def capture_payment_intent(id, amount: nil, **opts)
-        cmd = Application::Commands::CapturePaymentIntent.new(http_client)
-        cmd.execute(id: id, amount: amount, **opts)
+        payments.intents.capture(id, amount: amount, **opts)
       end
 
       def create_refund(charge_id:, amount: nil, **opts)
@@ -52,13 +55,11 @@ module Payment
       end
 
       def get_payment_intent(id)
-        query = Application::Queries::GetPaymentIntent.new(http_client)
-        query.execute(id: id)
+        payments.intents.get(id)
       end
 
       def get_payment_lifecycle(id)
-        query = Application::Queries::GetPaymentLifecycle.new(http_client)
-        query.execute(id: id)
+        payments.intents.get_lifecycle(id)
       end
 
       def get_transaction_report(query_params = {})

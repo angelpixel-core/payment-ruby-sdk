@@ -47,42 +47,42 @@ Este roadmap establece la reestructuración del SDK aplicando **Clean Architectu
 ---
 
 ### Fase 1: Bounded Context Vertical — `payments`
-- [ ] **1.1 Dominio (`domain/payments/`)**:
-  - [ ] `Payment::SDK::Domain::Payments::Entities::PaymentIntent` (`entities/payment_intent.rb`)
-  - [ ] `Payment::SDK::Domain::Payments::Entities::PaymentAttempt` (`entities/payment_attempt.rb`)
-  - [ ] `Payment::SDK::Domain::Payments::Entities::Charge` (`entities/charge.rb`)
-- [ ] **1.2 Aplicación (`application/payments/`)**:
-  - [ ] Comandos en `application/payments/commands/intents/`:
-    - [ ] `Payment::SDK::Application::Payments::Commands::Intents::Create` (`create.rb`)
-    - [ ] `Payment::SDK::Application::Payments::Commands::Intents::Confirm` (`confirm.rb`)
-    - [ ] `Payment::SDK::Application::Payments::Commands::Intents::Capture` (`capture.rb`)
-  - [ ] Consultas en `application/payments/queries/`:
-    - [ ] `Payment::SDK::Application::Payments::Queries::Intents::Get` (`intents/get.rb`)
-    - [ ] `Payment::SDK::Application::Payments::Queries::Charges::Get` (`charges/get.rb`)
-    - [ ] `Payment::SDK::Application::Payments::Queries::Attempts::Get` (`attempts/get.rb`)
-    - [ ] `Payment::SDK::Application::Payments::Queries::Lifecycles::Get` (`lifecycles/get.rb`)
-- [ ] **1.3 Interfaz / Sub-cliente (`interfaces/payments/`)**:
-  - [ ] `Payment::SDK::Interfaces::Payments::Client` (`lib/payment/sdk/interfaces/payments/client.rb`) exponiendo `.intents.create`, `.intents.get`, etc.
-- [ ] **1.4 Adaptadores Secundarios de Transporte HTTP (`infrastructure/adapters/http/`)**:
-  - [ ] `Payment::SDK::Infrastructure::Adapters::Http::Client::NetHttp` (`client/net_http.rb`)
-  - [ ] `Payment::SDK::Infrastructure::Adapters::Http::ErrorMapper` (`error_mapper.rb`)
-- [ ] **1.5 Integración en Client Facade**:
-  - [ ] Conectar `client.payments` hacia `Payment::SDK::Interfaces::Payments::Client` y delegar métodos directos (`create_payment_intent`, etc.).
-- [ ] **1.6 Pruebas Unitarias Granulares 1:1**:
-  - [ ] `test/payment/sdk/domain/payments/entities/payment_intent_test.rb`
-  - [ ] `test/payment/sdk/domain/payments/entities/charge_test.rb`
-  - [ ] `test/payment/sdk/domain/payments/entities/payment_attempt_test.rb`
-  - [ ] `test/payment/sdk/application/payments/commands/intents/create_test.rb`
-  - [ ] `test/payment/sdk/application/payments/commands/intents/confirm_test.rb`
-  - [ ] `test/payment/sdk/application/payments/commands/intents/capture_test.rb`
-  - [ ] `test/payment/sdk/application/payments/queries/intents/get_test.rb`
-  - [ ] `test/payment/sdk/application/payments/queries/charges/get_test.rb`
-  - [ ] `test/payment/sdk/application/payments/queries/attempts/get_test.rb`
-  - [ ] `test/payment/sdk/application/payments/queries/lifecycles/get_test.rb`
-  - [ ] `test/payment/sdk/interfaces/payments/client_test.rb`
-  - [ ] `test/payment/sdk/infrastructure/adapters/http/client/net_http_test.rb`
-- [ ] **1.7 Validación**:
-  - [ ] Ejecutar `bundle exec rake test` (100% verde).
+- [x] **1.1 Dominio (`domain/payments/`)**:
+  - [x] `Payment::SDK::Domain::Payments::Entities::PaymentIntent` (`entities/payment_intent.rb`)
+  - [x] `Payment::SDK::Domain::Payments::Entities::PaymentAttempt` (`entities/payment_attempt.rb`)
+  - [x] `Payment::SDK::Domain::Payments::Entities::Charge` (`entities/charge.rb`)
+- [x] **1.2 Aplicación (`application/payments/`)**:
+  - [x] Comandos en `application/payments/commands/intents/`:
+    - [x] `Payment::SDK::Application::Payments::Commands::Intents::Create` (`create.rb`)
+    - [x] `Payment::SDK::Application::Payments::Commands::Intents::Confirm` (`confirm.rb`)
+    - [x] `Payment::SDK::Application::Payments::Commands::Intents::Capture` (`capture.rb`)
+  - [x] Consultas en `application/payments/queries/`:
+    - [x] `Payment::SDK::Application::Payments::Queries::Intents::Get` (`intents/get.rb`)
+    - [x] `Payment::SDK::Application::Payments::Queries::Charges::Get` (`charges/get.rb`)
+    - [x] `Payment::SDK::Application::Payments::Queries::Attempts::Get` (`attempts/get.rb`)
+    - [x] `Payment::SDK::Application::Payments::Queries::Lifecycles::Get` (`lifecycles/get.rb`)
+- [x] **1.3 Interfaz / Sub-cliente (`interfaces/payments/`)**:
+  - [x] `Payment::SDK::Interfaces::Payments::Client` (`lib/payment/sdk/interfaces/payments/client.rb`) exponiendo `.intents.create`, `.intents.get`, etc.
+- [x] **1.4 Adaptadores Secundarios de Transporte HTTP (`infrastructure/adapters/http/`)**:
+  - [x] `Payment::SDK::Infrastructure::Adapters::Http::Client::NetHttp` (`client/net_http.rb`)
+  - [x] `Payment::SDK::Infrastructure::Adapters::Http::ErrorMapper` (`error_mapper.rb`)
+- [x] **1.5 Integración en Client Facade**:
+  - [x] Conectar `client.payments` hacia `Payment::SDK::Interfaces::Payments::Client` y delegar métodos directos (`create_payment_intent`, etc.).
+- [x] **1.6 Pruebas Unitarias Granulares 1:1**:
+  - [x] `test/payment/sdk/domain/payments/entities/payment_intent_test.rb`
+  - [x] `test/payment/sdk/domain/payments/entities/charge_test.rb`
+  - [x] `test/payment/sdk/domain/payments/entities/payment_attempt_test.rb`
+  - [x] `test/payment/sdk/application/payments/commands/intents/create_test.rb`
+  - [x] `test/payment/sdk/application/payments/commands/intents/confirm_test.rb`
+  - [x] `test/payment/sdk/application/payments/commands/intents/capture_test.rb`
+  - [x] `test/payment/sdk/application/payments/queries/intents/get_test.rb`
+  - [x] `test/payment/sdk/application/payments/queries/charges/get_test.rb`
+  - [x] `test/payment/sdk/application/payments/queries/attempts/get_test.rb`
+  - [x] `test/payment/sdk/application/payments/queries/lifecycles/get_test.rb`
+  - [x] `test/payment/sdk/interfaces/payments/client_test.rb`
+  - [x] `test/payment/sdk/infrastructure/adapters/http/client/net_http_test.rb`
+- [x] **1.7 Validación**:
+  - [x] Ejecutar `bundle exec rake test` (100% verde).
 
 ---
 
