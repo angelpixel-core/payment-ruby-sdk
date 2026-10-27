@@ -99,22 +99,22 @@ Para garantizar inmutabilidad, rendimiento y expresividad en Ruby 3.2+:
 ---
 
 ### Fase 2: Bounded Context Vertical — `refunds`
-- [ ] **2.1 Dominio (`domain/refunds/`)**:
-  - [ ] `Payment::SDK::Domain::Refunds::Entities::Refund` (`entities/refund.rb`)
-- [ ] **2.2 Aplicación (`application/refunds/`)**:
-  - [ ] `Payment::SDK::Application::Refunds::Commands::Create` (`commands/create.rb`)
-  - [ ] `Payment::SDK::Application::Refunds::Queries::Get` (`queries/get.rb`)
-- [ ] **2.3 Interfaz / Sub-cliente (`interfaces/refunds/`)**:
-  - [ ] `Payment::SDK::Interfaces::Refunds::Client` (`lib/payment/sdk/interfaces/refunds/client.rb`)
-- [ ] **2.4 Integración en Client Facade**:
-  - [ ] Conectar `client.refunds` y delegar `create_refund`, `get_refund`.
-- [ ] **2.5 Pruebas Unitarias Granulares 1:1**:
-  - [ ] `test/payment/sdk/domain/refunds/entities/refund_test.rb`
-  - [ ] `test/payment/sdk/application/refunds/commands/create_test.rb`
-  - [ ] `test/payment/sdk/application/refunds/queries/get_test.rb`
-  - [ ] `test/payment/sdk/interfaces/refunds/client_test.rb`
-- [ ] **2.6 Validación**:
-  - [ ] Ejecutar `bundle exec rake test` (100% verde).
+- [x] **2.1 Dominio (`domain/refunds/`)**:
+  - [x] `Payment::SDK::Domain::Refunds::Entities::Refund` (`entities/refund.rb`)
+- [x] **2.2 Aplicación (`application/refunds/`)**:
+  - [x] `Payment::SDK::Application::Refunds::Commands::Create` (`commands/create.rb`)
+  - [x] `Payment::SDK::Application::Refunds::Queries::Get` (`queries/get.rb`)
+- [x] **2.3 Interfaz / Sub-cliente (`interfaces/refunds/`)**:
+  - [x] `Payment::SDK::Interfaces::Refunds::Client` (`lib/payment/sdk/interfaces/refunds/client.rb`)
+- [x] **2.4 Integración en Client Facade**:
+  - [x] Conectar `client.refunds` y delegar `create_refund`, `get_refund`.
+- [x] **2.5 Pruebas Unitarias Granulares 1:1**:
+  - [x] `test/payment/sdk/domain/refunds/entities/refund_test.rb`
+  - [x] `test/payment/sdk/application/refunds/commands/create_test.rb`
+  - [x] `test/payment/sdk/application/refunds/queries/get_test.rb`
+  - [x] `test/payment/sdk/interfaces/refunds/client_test.rb`
+- [x] **2.6 Validación**:
+  - [x] Ejecutar `bundle exec rake test` (100% verde).
 
 ---
 

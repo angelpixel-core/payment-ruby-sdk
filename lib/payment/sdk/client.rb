@@ -22,6 +22,7 @@ require "payment/sdk/infrastructure/persistence/in_memory_snapshot_store"
 require "payment/sdk/infrastructure/reporting/in_memory_mismatch_reporter"
 
 require "payment/sdk/interfaces/payments/client"
+require "payment/sdk/interfaces/refunds/client"
 
 module Payment
   module SDK
@@ -37,6 +38,10 @@ module Payment
         @payments ||= Interfaces::Payments::Client.new(http_client)
       end
 
+      def refunds
+        @refunds ||= Interfaces::Refunds::Client.new(http_client)
+      end
+
       def create_payment_intent(amount:, currency:, **opts)
         payments.intents.create(amount: amount, currency: currency, **opts)
       end
@@ -50,8 +55,11 @@ module Payment
       end
 
       def create_refund(charge_id:, amount: nil, **opts)
-        cmd = Application::Commands::CreateRefund.new(http_client)
-        cmd.execute(charge_id: charge_id, amount: amount, **opts)
+        refunds.create(charge_id: charge_id, amount: amount, **opts)
+      end
+
+      def get_refund(id)
+        refunds.get(id)
       end
 
       def get_payment_intent(id)
