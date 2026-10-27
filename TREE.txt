@@ -1,0 +1,91 @@
+/payment-ruby-sdk
+├── Gemfile
+├── Gemfile.lock
+├── README.md
+├── Rakefile
+├── TREE.txt
+├── bin
+│   └── console
+├── examples
+│   └── smoke_test.rb
+├── lib
+│   ├── payment
+│   │   ├── sdk
+│   │   │   ├── application
+│   │   │   │   ├── commands
+│   │   │   │   │   ├── base_command.rb
+│   │   │   │   │   ├── capture_payment_intent.rb # -> intent/capture.rb
+│   │   │   │   │   ├── confirm_payment_intent.rb # -> intent/confirm.rb
+│   │   │   │   │   ├── create_payment_intent.rb  # -> intent/create.rb
+│   │   │   │   │   └── create_refund.rb
+│   │   │   │   ├── queries
+│   │   │   │   │   ├── base_query.rb
+│   │   │   │   │   ├── get_charge.rb             # -> charge/get.rb
+│   │   │   │   │   ├── get_payment_attempt.rb    # -> attempt/get.rb
+│   │   │   │   │   ├── get_payment_intent.rb     # -> intent/get.rb
+│   │   │   │   │   ├── get_payment_lifecycle.rb  # -> lifecycle/get.rb
+│   │   │   │   │   ├── get_refund.rb             # -> refund/get.rb
+│   │   │   │   │   ├── get_transaction_report.rb # -> report/get.rb
+│   │   │   │   │   └── get_transaction_snapshot.rb # -> snapshot/get.rb
+│   │   │   │   └── use_cases
+│   │   │   │       ├── process_webhook.rb        # -> webhook/process.rb
+│   │   │   │       └── reconcile_transactions.rb # -> transactions/reconcile.rb
+│   │   │   ├── client.rb
+│   │   │   ├── configuration.rb
+│   │   │   ├── domain
+│   │   │   │   ├── entities
+│   │   │   │   │   ├── charge.rb
+│   │   │   │   │   ├── payment_attempt.rb
+│   │   │   │   │   ├── payment_intent.rb
+│   │   │   │   │   ├── refund.rb
+│   │   │   │   │   └── webhook_event.rb
+│   │   │   │   ├── ports
+│   │   │   │   │   ├── http_client_port.rb
+│   │   │   │   │   ├── inbox_store_port.rb
+│   │   │   │   │   ├── mismatch_reporter_port.rb
+│   │   │   │   │   ├── signature_verifier_port.rb
+│   │   │   │   │   └── snapshot_store_port.rb
+│   │   │   │   └── value_objects
+│   │   │   │       ├── currency.rb
+│   │   │   │       ├── idempotency_key.rb
+│   │   │   │       └── money.rb
+│   │   │   ├── errors.rb
+│   │   │   ├── infrastructure
+│   │   │   │   ├── crypto
+│   │   │   │   │   └── hmac_sha256_verifier.rb
+│   │   │   │   ├── http
+│   │   │   │   │   ├── error_mapper.rb
+│   │   │   │   │   └── net_http_adapter.rb
+│   │   │   │   ├── persistence
+│   │   │   │   │   ├── in_memory_inbox_store.rb
+│   │   │   │   │   └── in_memory_snapshot_store.rb
+│   │   │   │   ├── reporting
+│   │   │   │   │   └── in_memory_mismatch_reporter.rb
+│   │   │   │   └── webhooks
+│   │   │   │       └── event_parser.rb
+│   │   │   └── version.rb
+│   │   └── sdk.rb
+│   └── payment-sdk.rb
+├── payment-sdk-0.1.0.gem
+├── payment-sdk.gemspec
+└── test
+    ├── payment
+    │   └── sdk
+    │       ├── application
+    │       │   ├── commands_test.rb
+    │       │   └── queries_test.rb
+    │       ├── configuration_test.rb
+    │       ├── domain
+    │       │   ├── entities_test.rb
+    │       │   └── value_objects_test.rb
+    │       ├── inbox_test.rb
+    │       ├── infrastructure
+    │       │   ├── crypto
+    │       │   │   └── hmac_sha256_verifier_test.rb
+    │       │   ├── http
+    │       │   │   ├── error_mapper_test.rb
+    │       │   │   └── net_http_adapter_test.rb
+    │       │   └── webhooks
+    │       │       └── event_parser_test.rb
+    │       └── reconciliation_test.rb
+    └── test_helper.rb
