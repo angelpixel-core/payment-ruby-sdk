@@ -99,6 +99,8 @@
 │   │   │   │   │   ├── base_command.rb                             # Comando base abstracto con validación de IdempotencyKey y protocolo #call
 │   │   │   │   │   └── base_query.rb                               # Consulta base abstracta con inyección de HttpClient y protocolo #call
 │   │   │   │   └── domain                                          # Dominio compartido por los Bounded Contexts
+│   │   │   │       ├── concerns                                    # Módulos y comportamientos transversales reutilizables
+│   │   │   │       │   └── payload_extractable.rb                  # Mixin para extracción segura de identificadores prefijados en payloads
 │   │   │   │       ├── ports                                       # Puertos genéricos utilizados transversalmente
 │   │   │   │       │   └── http                                    # Definición del puerto de transporte HTTP
 │   │   │   │       │       └── client.rb                           # Contrato abstracto del cliente HTTP para desacoplar el transporte de red
@@ -208,6 +210,8 @@
     │       │   │   ├── base_command_test.rb                        # Pruebas de validación de IdempotencyKey y contrato abstracto #call
     │       │   │   └── base_query_test.rb                          # Pruebas de contrato abstracto #call en consultas de lectura
     │       │   └── domain                                          # Pruebas del dominio compartido
+    │       │       ├── concerns                                    # Pruebas de módulos transversales del dominio compartido
+    │       │       │   └── payload_extractable_test.rb             # Pruebas de extracción de IDs desde estructuras de datos anidadas
     │       │       ├── ports                                       # Pruebas de puertos compartidos
     │       │       │   └── http                                    # Pruebas de contratos HTTP compartidos
     │       │       │       └── client_test.rb                      # Pruebas de contrato abstracto HttpClient
