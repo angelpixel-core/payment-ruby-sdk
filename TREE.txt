@@ -9,6 +9,8 @@
 │   └── console                                                     # Consola interactiva IRB con entorno Payment::SDK precargado
 ├── docs                                                            # Documentación técnica, arquitectónica y guías estratégicas
 │   ├── ARCHITECTURE.md                                             # Especificación técnica de Clean Architecture y Bounded Contexts
+│   ├── audit                                                       # Informes de auditoría técnica, concurrencia y resiliencia
+│   │   └── 001-codebase_technical_audit.md                         # Auditoría técnica de arquitectura, concurrencia, resiliencia y roadmap
 │   └── roadmap                                                     # Planes de evolución, migración y actas de diseño
 │       ├── 001-architecture_normalization_and_bounded_contexts.md  # Roadmap inicial de diseño e introducción de Bounded Contexts
 │       └── 002-context_first_normalization_and_audit.md            # Roadmap estratégico de reorganización Context-First y release

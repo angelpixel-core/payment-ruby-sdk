@@ -11,30 +11,30 @@ The SDK is partitioned into **4 Primary Bounded Contexts** plus a foundational *
 ```mermaid
 graph TD
     subgraph DrivingAdapters ["Driving / Primary Adapters (Interfaces)"]
-        PaymentsClient["Interfaces::Payments::Client"]
-        RefundsClient["Interfaces::Refunds::Client"]
-        WebhooksClient["Interfaces::Webhooks::Client"]
-        ReconciliationClient["Interfaces::Reconciliation::Client"]
+        PaymentsClient["Payments::Interfaces::Client"]
+        RefundsClient["Refunds::Interfaces::Client"]
+        WebhooksClient["Webhooks::Interfaces::Client"]
+        ReconciliationClient["Reconciliation::Interfaces::Client"]
     end
 
     subgraph ClientFacade ["Client Facade"]
         GlobalClient["Payment::SDK::Client"]
     end
 
-    subgraph ApplicationLayer ["Application Layer (CQRS & Use Cases)"]
-        PaymentsApp["application/payments/ (commands & queries)"]
-        RefundsApp["application/refunds/ (commands & queries)"]
-        WebhooksApp["application/webhooks/ (use_cases/process)"]
-        ReconciliationApp["application/reconciliation/ (use_cases/reconcile, queries)"]
-        SharedApp["application/shared/ (BaseCommand, BaseQuery)"]
+    subgraph ApplicationLayer ["Application Layer (CQRS & Use Cases with #call)"]
+        PaymentsApp["payments/application/ (commands & queries)"]
+        RefundsApp["refunds/application/ (commands & queries)"]
+        WebhooksApp["webhooks/application/ (use_cases/process)"]
+        ReconciliationApp["reconciliation/application/ (use_cases/reconcile, queries)"]
+        SharedApp["shared/application/ (BaseCommand, BaseQuery)"]
     end
 
-    subgraph DomainLayer ["Domain Layer (Pure Core)"]
-        PaymentsDomain["domain/payments/ (Entities: PaymentIntent, PaymentAttempt, Charge)"]
-        RefundsDomain["domain/refunds/ (Entities: Refund)"]
-        WebhooksDomain["domain/webhooks/ (Entities: WebhookEvent, Ports: Inbox::Store, Signature::Verifier)"]
-        ReconciliationDomain["domain/reconciliation/ (Ports: Snapshot::Store, Mismatch::Reporter)"]
-        SharedDomain["domain/shared/ (ValueObjects: Money, Currency, IdempotencyKey, Ports: Http::Client)"]
+    subgraph DomainLayer ["Domain Layer (Pure Core with Symbols)"]
+        PaymentsDomain["payments/domain/ (Entities: PaymentIntent, PaymentAttempt, Charge)"]
+        RefundsDomain["refunds/domain/ (Entities: Refund)"]
+        WebhooksDomain["webhooks/domain/ (Entities: WebhookEvent, Ports: Inbox::Store, Signature::Verifier)"]
+        ReconciliationDomain["reconciliation/domain/ (Ports: Snapshot::Store, Mismatch::Reporter)"]
+        SharedDomain["shared/domain/ (ValueObjects: Money, Currency, IdempotencyKey, Ports: Http::Client)"]
     end
 
     subgraph DrivenAdapters ["Driven / Secondary Adapters (Infrastructure)"]

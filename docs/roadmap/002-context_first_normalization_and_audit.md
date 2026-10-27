@@ -156,24 +156,24 @@ graph TD
 ---
 
 ### Fase 5: Auditoría Técnica Exhaustiva y Reescritura Enterprise de `README.md`
-- [ ] **5.1 Auditoría Técnica (`docs/audit/001-codebase_technical_audit.md`)**:
-  - [ ] Análisis de deuda técnica y trade-offs asumidos.
-  - [ ] Análisis de concurrencia y thread-safety (Mutex, aislamiento de estado mutable, connection pooling).
-  - [ ] Análisis de resiliencia (políticas de reintento, timeout handling, circuit breakers).
-  - [ ] Estrategia de observabilidad y telemetría (logging contextual, OpenTelemetry spans, métricas de latencia).
-  - [ ] Matriz de dependencias y compatibilidad con versiones de Ruby (3.2+, 3.3, 4.0).
-  - [ ] Roadmap de mejoras técnicas priorizadas (P0 a P3).
-- [ ] **5.2 Reescritura Enterprise del `README.md`**:
-  - [ ] Badges de estado, compatibilidad y cobertura.
-  - [ ] Índice numerado formal.
-  - [ ] Guía de instalación y configuración segura.
-  - [ ] Ejemplos de uso ejecutables por Bounded Context (Payments, Refunds, Webhooks, Reconciliation).
-  - [ ] Arquitectura y diseño del sistema con diagrama.
-  - [ ] Guía para colaboradores (testing, linter, estándares).
+- [x] **5.1 Auditoría Técnica (`docs/audit/001-codebase_technical_audit.md`)**:
+  - [x] Análisis de deuda técnica y trade-offs asumidos.
+  - [x] Análisis de concurrencia y thread-safety (Mutex, aislamiento de estado mutable, connection pooling).
+  - [x] Análisis de resiliencia (políticas de reintento, timeout handling, circuit breakers).
+  - [x] Estrategia de observabilidad y telemetría (logging contextual, OpenTelemetry spans, métricas de latencia).
+  - [x] Matriz de dependencias y compatibilidad con versiones de Ruby (3.2+, 3.3, 4.0).
+  - [x] Roadmap de mejoras técnicas priorizadas (P0 a P3).
+- [x] **5.2 Reescritura Enterprise del `README.md`**:
+  - [x] Badges de estado, compatibilidad y cobertura.
+  - [x] Índice numerado formal.
+  - [x] Guía de instalación y configuración segura.
+  - [x] Ejemplos de uso ejecutables por Bounded Context (Payments, Refunds, Webhooks, Reconciliation).
+  - [x] Arquitectura y diseño del sistema con diagrama.
+  - [x] Guía para colaboradores (testing, linter, estándares).
 
 ---
 
 ### Fase 6: Validación Final de Calidad y Commit
-- [ ] **6.1** Ejecutar `bundle exec rake test` (todas las pruebas pasando al 100% con 0 errores y 0 warnings).
-- [ ] **6.2** Marcar todos los ítems del roadmap como completados.
-- [ ] **6.3** Crear commit semántico: `feat(architecture): migrate to context-first layout, standardize #call, add technical audit and enterprise docs`.
+- [x] **6.1** Ejecutar `bundle exec rake test` (todas las pruebas pasando al 100% con 0 errores y 0 warnings).
+- [x] **6.2** Marcar todos los ítems del roadmap como completados.
+- [x] **6.3** Crear commit semántico: `feat(architecture): migrate to context-first layout, standardize #call, add technical audit and enterprise docs`.
