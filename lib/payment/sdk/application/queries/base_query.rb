@@ -1,16 +1,12 @@
 # frozen_string_literal: true
 
+require "payment/sdk/application/shared/base_query"
+
 module Payment
   module SDK
     module Application
       module Queries
-        class BaseQuery
-          attr_reader :http_client
-
-          def initialize(http_client)
-            @http_client = http_client
-          end
-        end
+        BaseQuery = Payment::SDK::Application::Shared::BaseQuery
       end
     end
   end

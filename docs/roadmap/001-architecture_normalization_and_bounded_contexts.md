@@ -25,24 +25,24 @@ Este roadmap establece la reestructuración del SDK aplicando **Clean Architectu
 ## 2. Fases de Ejecución Vertical (Checklist de Tareas)
 
 ### Fase 0: Cimientos Compartidos (Shared Domain & Application Base)
-- [ ] **0.1 Value Objects** en `lib/payment/sdk/domain/shared/value_objects/`:
-  - [ ] `Payment::SDK::Domain::Shared::ValueObjects::Money` (`money.rb`)
-  - [ ] `Payment::SDK::Domain::Shared::ValueObjects::Currency` (`currency.rb`)
-  - [ ] `Payment::SDK::Domain::Shared::ValueObjects::IdempotencyKey` (`idempotency_key.rb`)
-- [ ] **0.2 Puertos Compartidos** en `lib/payment/sdk/domain/shared/ports/http/`:
-  - [ ] `Payment::SDK::Domain::Shared::Ports::Http::Client` (`client.rb`)
-- [ ] **0.3 Clases Base de Aplicación** en `lib/payment/sdk/application/shared/`:
-  - [ ] `Payment::SDK::Application::Shared::BaseCommand` (`base_command.rb`)
-  - [ ] `Payment::SDK::Application::Shared::BaseQuery` (`base_query.rb`)
-- [ ] **0.4 Pruebas Unitarias Granulares**:
-  - [ ] `test/payment/sdk/domain/shared/value_objects/money_test.rb`
-  - [ ] `test/payment/sdk/domain/shared/value_objects/currency_test.rb`
-  - [ ] `test/payment/sdk/domain/shared/value_objects/idempotency_key_test.rb`
-  - [ ] `test/payment/sdk/domain/shared/ports/http/client_test.rb`
-  - [ ] `test/payment/sdk/application/shared/base_command_test.rb`
-  - [ ] `test/payment/sdk/application/shared/base_query_test.rb`
-- [ ] **0.5 Validación**:
-  - [ ] Ejecutar `bundle exec rake test` (100% verde).
+- [x] **0.1 Value Objects** en `lib/payment/sdk/domain/shared/value_objects/`:
+  - [x] `Payment::SDK::Domain::Shared::ValueObjects::Money` (`money.rb`)
+  - [x] `Payment::SDK::Domain::Shared::ValueObjects::Currency` (`currency.rb`)
+  - [x] `Payment::SDK::Domain::Shared::ValueObjects::IdempotencyKey` (`idempotency_key.rb`)
+- [x] **0.2 Puertos Compartidos** en `lib/payment/sdk/domain/shared/ports/http/`:
+  - [x] `Payment::SDK::Domain::Shared::Ports::Http::Client` (`client.rb`)
+- [x] **0.3 Clases Base de Aplicación** en `lib/payment/sdk/application/shared/`:
+  - [x] `Payment::SDK::Application::Shared::BaseCommand` (`base_command.rb`)
+  - [x] `Payment::SDK::Application::Shared::BaseQuery` (`base_query.rb`)
+- [x] **0.4 Pruebas Unitarias Granulares**:
+  - [x] `test/payment/sdk/domain/shared/value_objects/money_test.rb`
+  - [x] `test/payment/sdk/domain/shared/value_objects/currency_test.rb`
+  - [x] `test/payment/sdk/domain/shared/value_objects/idempotency_key_test.rb`
+  - [x] `test/payment/sdk/domain/shared/ports/http/client_test.rb`
+  - [x] `test/payment/sdk/application/shared/base_command_test.rb`
+  - [x] `test/payment/sdk/application/shared/base_query_test.rb`
+- [x] **0.5 Validación**:
+  - [x] Ejecutar `bundle exec rake test` (100% verde).
 
 ---
 

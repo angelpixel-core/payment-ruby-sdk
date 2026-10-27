@@ -33,7 +33,7 @@ class ErrorMapperTest < Minitest::Test
   def test_maps_idempotency_conflict_to_duplicate_request_error
     response = MockResponse.new("409", { error_code: "idempotency_conflict" }.to_json)
     
-    error = assert_raises(Payment::SDK::DuplicateRequestError) do
+    assert_raises(Payment::SDK::DuplicateRequestError) do
       Payment::SDK::Infrastructure::Http::ErrorMapper.map_error(response)
     end
   end
@@ -41,7 +41,7 @@ class ErrorMapperTest < Minitest::Test
   def test_maps_internal_error_to_upstream_error
     response = MockResponse.new("500", { error_code: "internal_error" }.to_json)
     
-    error = assert_raises(Payment::SDK::UpstreamError) do
+    assert_raises(Payment::SDK::UpstreamError) do
       Payment::SDK::Infrastructure::Http::ErrorMapper.map_error(response)
     end
   end
