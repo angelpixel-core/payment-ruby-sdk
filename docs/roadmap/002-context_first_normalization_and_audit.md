@@ -143,9 +143,9 @@ graph TD
 ---
 
 ### Fase 3: Eliminación de `examples/` y Limpieza de Residuos
-- [ ] **3.1** Eliminar `examples/smoke_test.rb` y el directorio `examples/`.
-- [ ] **3.2** Asegurar que ningún script ni test dependa de rutas temporales o dobles manuales en desuso.
-- [ ] **3.3** Verificar que no queden carpetas vacías ni archivos residuales con `git status`.
+- [x] **3.1** Eliminar `examples/smoke_test.rb` y el directorio `examples/`.
+- [x] **3.2** Asegurar que ningún script ni test dependa de rutas temporales o dobles manuales en desuso.
+- [x] **3.3** Verificar que no queden carpetas vacías ni archivos residuales con `git status`.
 
 ---
 
