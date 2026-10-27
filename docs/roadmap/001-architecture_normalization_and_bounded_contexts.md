@@ -22,7 +22,19 @@ Este roadmap establece la reestructuración del SDK aplicando **Clean Architectu
 
 ---
 
-## 2. Fases de Ejecución Vertical (Checklist de Tareas)
+## 2. Directrices de Tipado: Cuándo usar `Data`, `Class` y `Struct`
+
+Para garantizar inmutabilidad, rendimiento y expresividad en Ruby 3.2+:
+
+| Construcción | Cuándo Usar | Justificación | Ejemplos en el SDK |
+| :--- | :--- | :--- | :--- |
+| **`Data`** | **DTOs, Respuestas de Queries, Snapshots, Eventos y Value Objects inmutables sin lógica de mutación interna.** | Inmutable por defecto, igualdad por valor automática (`==`, `hash`), soporta `.with(...)` para copias funcionales y no contamina con métodos de Array (`Enumerable`). | `Domain::Webhooks::Entities::WebhookEvent`<br>`Domain::Reconciliation::SnapshotEntry`<br>`Domain::Reconciliation::MismatchReport`<br>`VerificationResult` |
+| **`Class`** | **Agregados y Entidades DDD con ciclo de vida o validación densa.** | Encapsula transiciones de estado, reglas de negocio invariantes complejas en constructor y métodos de consulta semánticos (`succeeded?`, `fully_captured?`). También para Services, Commands y Mocks de test que implementan interfaces/puertos con espías de estado. | `Domain::Payments::Entities::PaymentIntent`<br>`Domain::Payments::Entities::Charge`<br>`Domain::Refunds::Entities::Refund`<br>`MockPaymentHttpClient` (en tests) |
+| **`Struct`** | **Exclusivamente para stubs y dobles de prueba rápidos en tests.** | Permite instanciar objetos dummy anónimos y de solo lectura/lectura-escritura en una sola línea sin crear clases auxiliares verbosas. | `Struct.new(:code, :body).new("200", "{}")` en pruebas HTTP de adaptadores. |
+
+---
+
+## 3. Fases de Ejecución Vertical (Checklist de Tareas)
 
 ### Fase 0: Cimientos Compartidos (Shared Domain & Application Base)
 - [x] **0.1 Value Objects** en `lib/payment/sdk/domain/shared/value_objects/`:
