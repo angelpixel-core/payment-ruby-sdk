@@ -119,31 +119,31 @@ Para garantizar inmutabilidad, rendimiento y expresividad en Ruby 3.2+:
 ---
 
 ### Fase 3: Bounded Context Vertical — `webhooks`
-- [ ] **3.1 Dominio (`domain/webhooks/`)**:
-  - [ ] `Payment::SDK::Domain::Webhooks::Entities::WebhookEvent` (`entities/webhook_event.rb`)
-  - [ ] Puertos en `domain/webhooks/ports/`:
-    - [ ] `Payment::SDK::Domain::Webhooks::Ports::Inbox::Store` (`inbox/store.rb`)
-    - [ ] `Payment::SDK::Domain::Webhooks::Ports::Signature::Verifier` (`signature/verifier.rb`)
-- [ ] **3.2 Adaptadores Secundarios (`infrastructure/adapters/`)**:
-  - [ ] `Payment::SDK::Infrastructure::Adapters::Crypto::Signature::Verifier::HmacSha256` (`crypto/signature/verifier/hmac_sha256.rb`)
-  - [ ] `Payment::SDK::Infrastructure::Adapters::Persistence::Inbox::Store::InMemory` (`persistence/inbox/store/in_memory.rb`)
-  - [ ] `Payment::SDK::Infrastructure::Adapters::Webhooks::EventParser` (`webhooks/event_parser.rb`)
-- [ ] **3.3 Aplicación (`application/webhooks/`)**:
-  - [ ] `Payment::SDK::Application::Webhooks::UseCases::Process` (`use_cases/process.rb`)
-- [ ] **3.4 Interfaz / Sub-cliente (`interfaces/webhooks/`)**:
-  - [ ] `Payment::SDK::Interfaces::Webhooks::Client` (`lib/payment/sdk/interfaces/webhooks/client.rb`)
-- [ ] **3.5 Integración en Client Facade**:
-  - [ ] Conectar `client.webhooks` y delegar `process_webhook`.
-- [ ] **3.6 Pruebas Unitarias Granulares 1:1**:
-  - [ ] `test/payment/sdk/domain/webhooks/entities/webhook_event_test.rb`
-  - [ ] `test/payment/sdk/domain/webhooks/ports/inbox/store_test.rb`
-  - [ ] `test/payment/sdk/domain/webhooks/ports/signature/verifier_test.rb`
-  - [ ] `test/payment/sdk/infrastructure/adapters/crypto/signature/verifier/hmac_sha256_test.rb`
-  - [ ] `test/payment/sdk/infrastructure/adapters/persistence/inbox/store/in_memory_test.rb`
-  - [ ] `test/payment/sdk/application/webhooks/use_cases/process_test.rb`
-  - [ ] `test/payment/sdk/interfaces/webhooks/client_test.rb`
-- [ ] **3.7 Validación**:
-  - [ ] Ejecutar `bundle exec rake test` (100% verde).
+- [x] **3.1 Dominio (`domain/webhooks/`)**:
+  - [x] `Payment::SDK::Domain::Webhooks::Entities::WebhookEvent` (`entities/webhook_event.rb`)
+  - [x] Puertos en `domain/webhooks/ports/`:
+    - [x] `Payment::SDK::Domain::Webhooks::Ports::Inbox::Store` (`inbox/store.rb`)
+    - [x] `Payment::SDK::Domain::Webhooks::Ports::Signature::Verifier` (`signature/verifier.rb`)
+- [x] **3.2 Adaptadores Secundarios (`infrastructure/adapters/`)**:
+  - [x] `Payment::SDK::Infrastructure::Adapters::Crypto::Signature::Verifier::HmacSha256` (`crypto/signature/verifier/hmac_sha256.rb`)
+  - [x] `Payment::SDK::Infrastructure::Adapters::Persistence::Inbox::Store::InMemory` (`persistence/inbox/store/in_memory.rb`)
+  - [x] `Payment::SDK::Infrastructure::Adapters::Webhooks::EventParser` (`webhooks/event_parser.rb`)
+- [x] **3.3 Aplicación (`application/webhooks/`)**:
+  - [x] `Payment::SDK::Application::Webhooks::UseCases::Process` (`use_cases/process.rb`)
+- [x] **3.4 Interfaz / Sub-cliente (`interfaces/webhooks/`)**:
+  - [x] `Payment::SDK::Interfaces::Webhooks::Client` (`lib/payment/sdk/interfaces/webhooks/client.rb`)
+- [x] **3.5 Integración en Client Facade**:
+  - [x] Conectar `client.webhooks` y delegar `process_webhook`.
+- [x] **3.6 Pruebas Unitarias Granulares 1:1**:
+  - [x] `test/payment/sdk/domain/webhooks/entities/webhook_event_test.rb`
+  - [x] `test/payment/sdk/domain/webhooks/ports/inbox/store_test.rb`
+  - [x] `test/payment/sdk/domain/webhooks/ports/signature/verifier_test.rb`
+  - [x] `test/payment/sdk/infrastructure/adapters/crypto/signature/verifier/hmac_sha256_test.rb`
+  - [x] `test/payment/sdk/infrastructure/adapters/persistence/inbox/store/in_memory_test.rb`
+  - [x] `test/payment/sdk/application/webhooks/use_cases/process_test.rb`
+  - [x] `test/payment/sdk/interfaces/webhooks/client_test.rb`
+- [x] **3.7 Validación**:
+  - [x] Ejecutar `bundle exec rake test` (100% verde).
 
 ---
 

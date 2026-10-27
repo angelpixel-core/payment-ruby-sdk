@@ -23,6 +23,7 @@ require "payment/sdk/infrastructure/reporting/in_memory_mismatch_reporter"
 
 require "payment/sdk/interfaces/payments/client"
 require "payment/sdk/interfaces/refunds/client"
+require "payment/sdk/interfaces/webhooks/client"
 
 module Payment
   module SDK
@@ -40,6 +41,14 @@ module Payment
 
       def refunds
         @refunds ||= Interfaces::Refunds::Client.new(http_client)
+      end
+
+      def webhooks
+        @webhooks ||= Interfaces::Webhooks::Client.new(
+          secret: @config.signing_secret,
+          inbox_store: default_inbox_store,
+          verifier: signature_verifier
+        )
       end
 
       def create_payment_intent(amount:, currency:, **opts)
@@ -80,17 +89,12 @@ module Payment
         query.execute(**query_params)
       end
 
-      def process_webhook(payload:, signature_header:, projection:, inbox_store: default_inbox_store)
-        use_case = Application::UseCases::ProcessWebhook.new(
-          inbox_store: inbox_store,
-          projection: projection,
-          verifier: signature_verifier
-        )
-        use_case.call(
-          delivery_id: extract_delivery_id(payload),
-          raw_payload: payload.is_a?(String) ? payload : JSON.generate(payload),
+      def process_webhook(payload:, signature_header:, projection:, inbox_store: nil)
+        webhooks.process(
+          payload: payload,
           signature_header: signature_header,
-          secret: @config.signing_secret
+          projection: projection,
+          inbox_store: inbox_store
         )
       end
 

@@ -1,14 +1,12 @@
 # frozen_string_literal: true
 
+require "payment/sdk/domain/webhooks/ports/signature/verifier"
+
 module Payment
   module SDK
     module Domain
       module Ports
-        module SignatureVerifierPort
-          def verify(payload:, signature:, secret:, timestamp_tolerance: 300)
-            raise NotImplementedError, "#{self.class} must implement #verify"
-          end
-        end
+        SignatureVerifierPort = Payment::SDK::Domain::Webhooks::Ports::Signature::Verifier
       end
     end
   end
