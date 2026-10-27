@@ -24,6 +24,7 @@ require "payment/sdk/infrastructure/reporting/in_memory_mismatch_reporter"
 require "payment/sdk/interfaces/payments/client"
 require "payment/sdk/interfaces/refunds/client"
 require "payment/sdk/interfaces/webhooks/client"
+require "payment/sdk/interfaces/reconciliation/client"
 
 module Payment
   module SDK
@@ -48,6 +49,14 @@ module Payment
           secret: @config.signing_secret,
           inbox_store: default_inbox_store,
           verifier: signature_verifier
+        )
+      end
+
+      def reconciliation
+        @reconciliation ||= Interfaces::Reconciliation::Client.new(
+          http_client: http_client,
+          snapshot_store: default_snapshot_store,
+          mismatch_reporter: default_mismatch_reporter
         )
       end
 
@@ -80,13 +89,11 @@ module Payment
       end
 
       def get_transaction_report(query_params = {})
-        query = Application::Queries::GetTransactionReport.new(http_client)
-        query.execute(**query_params)
+        reconciliation.get_report(**query_params)
       end
 
       def get_transaction_snapshot(query_params = {})
-        query = Application::Queries::GetTransactionSnapshot.new(http_client)
-        query.execute(**query_params)
+        reconciliation.get_snapshot(**query_params)
       end
 
       def process_webhook(payload:, signature_header:, projection:, inbox_store: nil)
@@ -98,13 +105,13 @@ module Payment
         )
       end
 
-      def reconcile(local_records:, run_id:, snapshot_store: default_snapshot_store, mismatch_reporter: default_mismatch_reporter)
-        use_case = Application::UseCases::ReconcileTransactions.new(
-          snapshot_client: self,
+      def reconcile(local_records:, run_id:, snapshot_store: nil, mismatch_reporter: nil)
+        reconciliation.reconcile(
+          local_records: local_records,
+          run_id: run_id,
           snapshot_store: snapshot_store,
           mismatch_reporter: mismatch_reporter
         )
-        use_case.call(local_records: local_records, run_id: run_id)
       end
 
       private

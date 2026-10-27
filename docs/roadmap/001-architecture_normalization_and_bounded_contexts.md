@@ -148,33 +148,33 @@ Para garantizar inmutabilidad, rendimiento y expresividad en Ruby 3.2+:
 ---
 
 ### Fase 4: Bounded Context Vertical — `reconciliation`
-- [ ] **4.1 Dominio (`domain/reconciliation/`)**:
-  - [ ] Puertos en `domain/reconciliation/ports/`:
-    - [ ] `Payment::SDK::Domain::Reconciliation::Ports::Snapshot::Store` (`snapshot/store.rb`)
-    - [ ] `Payment::SDK::Domain::Reconciliation::Ports::Mismatch::Reporter` (`mismatch/reporter.rb`)
-- [ ] **4.2 Adaptadores Secundarios (`infrastructure/adapters/`)**:
-  - [ ] `Payment::SDK::Infrastructure::Adapters::Persistence::Snapshot::Store::InMemory` (`persistence/snapshot/store/in_memory.rb`)
-  - [ ] `Payment::SDK::Infrastructure::Adapters::Reporting::Mismatch::Reporter::InMemory` (`reporting/mismatch/reporter/in_memory.rb`)
-- [ ] **4.3 Aplicación (`application/reconciliation/`)**:
-  - [ ] `Payment::SDK::Application::Reconciliation::UseCases::Reconcile` (`use_cases/reconcile.rb`)
-  - [ ] Consultas en `application/reconciliation/queries/`:
-    - [ ] `Payment::SDK::Application::Reconciliation::Queries::Reports::Get` (`reports/get.rb`)
-    - [ ] `Payment::SDK::Application::Reconciliation::Queries::Snapshots::Get` (`snapshots/get.rb`)
-- [ ] **4.4 Interfaz / Sub-cliente (`interfaces/reconciliation/`)**:
-  - [ ] `Payment::SDK::Interfaces::Reconciliation::Client` (`lib/payment/sdk/interfaces/reconciliation/client.rb`)
-- [ ] **4.5 Integración en Client Facade**:
-  - [ ] Conectar `client.reconciliation` y delegar `reconcile`, `get_transaction_report`, `get_transaction_snapshot`.
-- [ ] **4.6 Pruebas Unitarias Granulares 1:1**:
-  - [ ] `test/payment/sdk/domain/reconciliation/ports/snapshot/store_test.rb`
-  - [ ] `test/payment/sdk/domain/reconciliation/ports/mismatch/reporter_test.rb`
-  - [ ] `test/payment/sdk/infrastructure/adapters/persistence/snapshot/store/in_memory_test.rb`
-  - [ ] `test/payment/sdk/infrastructure/adapters/reporting/mismatch/reporter/in_memory_test.rb`
-  - [ ] `test/payment/sdk/application/reconciliation/use_cases/reconcile_test.rb`
-  - [ ] `test/payment/sdk/application/reconciliation/queries/reports/get_test.rb`
-  - [ ] `test/payment/sdk/application/reconciliation/queries/snapshots/get_test.rb`
-  - [ ] `test/payment/sdk/interfaces/reconciliation/client_test.rb`
-- [ ] **4.7 Validación**:
-  - [ ] Ejecutar `bundle exec rake test` (100% verde).
+- [x] **4.1 Dominio (`domain/reconciliation/`)**:
+  - [x] Puertos en `domain/reconciliation/ports/`:
+    - [x] `Payment::SDK::Domain::Reconciliation::Ports::Snapshot::Store` (`snapshot/store.rb`)
+    - [x] `Payment::SDK::Domain::Reconciliation::Ports::Mismatch::Reporter` (`mismatch/reporter.rb`)
+- [x] **4.2 Adaptadores Secundarios (`infrastructure/adapters/`)**:
+  - [x] `Payment::SDK::Infrastructure::Adapters::Persistence::Snapshot::Store::InMemory` (`persistence/snapshot/store/in_memory.rb`)
+  - [x] `Payment::SDK::Infrastructure::Adapters::Reporting::Mismatch::Reporter::InMemory` (`reporting/mismatch/reporter/in_memory.rb`)
+- [x] **4.3 Aplicación (`application/reconciliation/`)**:
+  - [x] `Payment::SDK::Application::Reconciliation::UseCases::Reconcile` (`use_cases/reconcile.rb`)
+  - [x] Consultas en `application/reconciliation/queries/`:
+    - [x] `Payment::SDK::Application::Reconciliation::Queries::Reports::Get` (`reports/get.rb`)
+    - [x] `Payment::SDK::Application::Reconciliation::Queries::Snapshots::Get` (`snapshots/get.rb`)
+- [x] **4.4 Interfaz / Sub-cliente (`interfaces/reconciliation/`)**:
+  - [x] `Payment::SDK::Interfaces::Reconciliation::Client` (`lib/payment/sdk/interfaces/reconciliation/client.rb`)
+- [x] **4.5 Integración en Client Facade**:
+  - [x] Conectar `client.reconciliation` y delegar `reconcile`, `get_transaction_report`, `get_transaction_snapshot`.
+- [x] **4.6 Pruebas Unitarias Granulares 1:1**:
+  - [x] `test/payment/sdk/domain/reconciliation/ports/snapshot/store_test.rb`
+  - [x] `test/payment/sdk/domain/reconciliation/ports/mismatch/reporter_test.rb`
+  - [x] `test/payment/sdk/infrastructure/adapters/persistence/snapshot/store/in_memory_test.rb`
+  - [x] `test/payment/sdk/infrastructure/adapters/reporting/mismatch/reporter/in_memory_test.rb`
+  - [x] `test/payment/sdk/application/reconciliation/use_cases/reconcile_test.rb`
+  - [x] `test/payment/sdk/application/reconciliation/queries/reports/get_test.rb`
+  - [x] `test/payment/sdk/application/reconciliation/queries/snapshots/get_test.rb`
+  - [x] `test/payment/sdk/interfaces/reconciliation/client_test.rb`
+- [x] **4.7 Validación**:
+  - [x] Ejecutar `bundle exec rake test` (100% verde).
 
 ---
 

@@ -1,14 +1,12 @@
 # frozen_string_literal: true
 
+require "payment/sdk/domain/reconciliation/ports/mismatch/reporter"
+
 module Payment
   module SDK
     module Domain
       module Ports
-        module MismatchReporterPort
-          def report(snapshot:)
-            raise NotImplementedError, "#{self.class} must implement #report"
-          end
-        end
+        MismatchReporterPort = Payment::SDK::Domain::Reconciliation::Ports::Mismatch::Reporter
       end
     end
   end

@@ -1,22 +1,12 @@
 # frozen_string_literal: true
 
+require "payment/sdk/domain/reconciliation/ports/snapshot/store"
+
 module Payment
   module SDK
     module Domain
       module Ports
-        module SnapshotStorePort
-          def save(snapshot)
-            raise NotImplementedError, "#{self.class} must implement #save"
-          end
-
-          def find(id)
-            raise NotImplementedError, "#{self.class} must implement #find"
-          end
-
-          def all
-            raise NotImplementedError, "#{self.class} must implement #all"
-          end
-        end
+        SnapshotStorePort = Payment::SDK::Domain::Reconciliation::Ports::Snapshot::Store
       end
     end
   end
