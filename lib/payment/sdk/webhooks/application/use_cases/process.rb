@@ -5,15 +5,32 @@ require "payment/sdk/errors"
 module Payment
   module SDK
     module Webhooks
+      # Application layer of the webhooks bounded context.
       module Application
+        # Use cases of the webhooks bounded context.
         module UseCases
+          # Orchestrates transactional inbox deduplication, cryptographic signature
+          # verification, and domain projection execution for incoming webhooks.
           class Process
+            # @param inbox_store [Domain::Ports::Inbox::Store] inbox store port implementation
+            # @param projection [#apply!] domain projection responding to `#apply!(inbox_entry:)`
+            # @param verifier [Domain::Ports::Signature::Verifier] signature verifier port implementation
             def initialize(inbox_store:, projection:, verifier:)
               @inbox_store = inbox_store
               @projection = projection
               @verifier = verifier
             end
 
+            # Processes a webhook delivery idempotently.
+            #
+            # @param delivery_id [String] unique delivery identifier
+            # @param raw_payload [String] raw JSON body
+            # @param signature_header [String] signature header (`t=...,v1=...`)
+            # @param secret [String] webhook signing secret
+            # @param timestamp_tolerance [Integer] maximum timestamp age in seconds
+            # @return [Hash] `{ status: :processed | :duplicate, entry: Hash }`
+            # @raise [ArgumentError] when the same `delivery_id` arrives with a different payload
+            # @raise [Payment::SDK::SignatureVerificationError] when signature verification fails
             def call(delivery_id:, raw_payload:, signature_header:, secret:, timestamp_tolerance: 300)
               existing_entry = @inbox_store.find_by_delivery_id(delivery_id)
 

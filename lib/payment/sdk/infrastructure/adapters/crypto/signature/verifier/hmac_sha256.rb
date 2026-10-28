@@ -6,14 +6,29 @@ require "payment/sdk/errors"
 
 module Payment
   module SDK
+    # Infrastructure layer containing secondary/driven adapters.
     module Infrastructure
+      # Driven adapter implementations of domain ports.
       module Adapters
+        # Cryptographic adapters.
         module Crypto
+          # Webhook signature adapters.
           module Signature
+            # Signature verifier adapters.
             module Verifier
+              # HMAC-SHA256 webhook signature verifier with timestamp tolerance
+              # and constant-time digest comparison.
               class HmacSha256
                 include Payment::SDK::Webhooks::Domain::Ports::Signature::Verifier
 
+                # Verifies a `t=<timestamp>,v1=<hex_digest>` webhook signature header.
+                #
+                # @param payload [String] raw webhook request body
+                # @param signature [String] signature header value
+                # @param secret [String] shared signing secret
+                # @param timestamp_tolerance [Integer] maximum clock skew in seconds (defaults to 300)
+                # @return [Boolean] `true` when the signature and timestamp are valid
+                # @raise [Payment::SDK::SignatureVerificationError] when verification fails
                 def verify(payload:, signature:, secret:, timestamp_tolerance: 300)
                   raise Payment::SDK::SignatureVerificationError, "Missing signature" if signature.nil? || signature.to_s.strip.empty?
                   raise Payment::SDK::SignatureVerificationError, "Missing payload" if payload.nil?

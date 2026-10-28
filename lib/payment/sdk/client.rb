@@ -14,19 +14,20 @@ require "payment/sdk/reconciliation/interfaces/client"
 module Payment
   module SDK
     # Facade over the four bounded contexts of the SDK
-    # (payments, refunds, webhooks and reconciliation).
+    # ({#payments}, {#refunds}, {#webhooks}, and {#reconciliation}).
     #
-    # A client is stateless after initialization and safe to share across threads.
+    # A client duplicates and validates its configuration upon initialization
+    # and is safe to share across threads.
     #
     # @example
     #   client = Payment::SDK::Client.new
     #   intent = client.create_payment_intent(amount: 1000, currency: "usd", idempotency_key: "order-1")
     class Client
-      # @return [Payment::SDK::Configuration] frozen-in-practice copy of the configuration
+      # @return [Payment::SDK::Configuration] validated copy of the client configuration
       attr_reader :config
 
-      # @param config [Payment::SDK::Configuration] configuration to copy and validate
-      # @raise [Payment::SDK::ConfigurationError] when the configuration is invalid
+      # @param config [Payment::SDK::Configuration] configuration to duplicate and validate
+      # @raise [ArgumentError] when the configuration has invalid timeout or retry values
       def initialize(config = Payment::SDK.configuration)
         @config = config.dup
         @config.validate!
@@ -63,71 +64,91 @@ module Payment
       # Creates a payment intent.
       #
       # @param amount [Integer] amount in minor units (cents)
-      # @param currency [String] ISO 4217 currency code
+      # @param currency [String] 3-letter ISO 4217 currency code
       # @param opts [Hash] extra command options; `:idempotency_key` is mandatory
-      # @return [Payment::SDK::Payments::Domain::Entities::PaymentIntent]
-      # @raise [ArgumentError] when `:idempotency_key` is missing
+      # @return [Hash] parsed response payload from the API
+      # @raise [ArgumentError] when `:idempotency_key` is missing or amount/currency is invalid
       def create_payment_intent(amount:, currency:, **opts)
         payments.intents.create(amount: amount, currency: currency, **opts)
       end
 
       # Confirms a payment intent with a payment method token.
       #
-      # @param id [String] payment intent id (`pi_...`)
-      # @param payment_method_token [String]
+      # @param id [String] payment intent identifier (`pi_...`)
+      # @param payment_method_token [String] payment method token
       # @param opts [Hash] extra command options; `:idempotency_key` is mandatory
-      # @return [Payment::SDK::Payments::Domain::Entities::PaymentIntent]
+      # @return [Hash] parsed response payload from the API
       def confirm_payment_intent(id, payment_method_token:, **opts)
         payments.intents.confirm(id, payment_method_token: payment_method_token, **opts)
       end
 
-      # Captures previously authorized funds.
+      # Captures previously authorized funds for a payment intent.
       #
-      # @param id [String] payment intent id
-      # @param amount [Integer, nil] amount to capture; nil captures the full amount
+      # @param id [String] payment intent identifier
+      # @param amount [Integer, nil] amount to capture; `nil` captures the full amount
       # @param opts [Hash] extra command options; `:idempotency_key` is mandatory
-      # @return [Payment::SDK::Payments::Domain::Entities::PaymentIntent]
+      # @return [Hash] parsed response payload from the API
       def capture_payment_intent(id, amount: nil, **opts)
         payments.intents.capture(id, amount: amount, **opts)
       end
 
       # Issues a full or partial refund over a charge.
       #
-      # @param charge_id [String] charge id (`ch_...`)
-      # @param amount [Integer, nil] amount to refund; nil refunds the full charge
+      # @param charge_id [String] charge identifier (`ch_...`)
+      # @param amount [Integer, nil] amount to refund; `nil` refunds the full charge
       # @param opts [Hash] extra command options; `:idempotency_key` is mandatory
-      # @return [Payment::SDK::Refunds::Domain::Entities::Refund]
+      # @return [Hash] parsed response payload from the API
       def create_refund(charge_id:, amount: nil, **opts)
         refunds.create(charge_id: charge_id, amount: amount, **opts)
       end
 
+      # Retrieves a refund by its identifier.
+      #
+      # @param id [String] refund identifier (`re_...`)
+      # @return [Hash] parsed refund payload
       def get_refund(id)
         refunds.get(id)
       end
 
+      # Retrieves a payment intent by its identifier.
+      #
+      # @param id [String] payment intent identifier (`pi_...`)
+      # @return [Hash] parsed payment intent payload
       def get_payment_intent(id)
         payments.intents.get(id)
       end
 
+      # Retrieves the aggregated lifecycle view of a payment intent.
+      #
+      # @param id [String] payment intent identifier (`pi_...`)
+      # @return [Hash] parsed lifecycle payload
       def get_payment_lifecycle(id)
         payments.intents.get_lifecycle(id)
       end
 
+      # Retrieves a canonical transaction report.
+      #
+      # @param query_params [Hash] optional `:start_date` and `:end_date` filters
+      # @return [Array<Hash>, Hash] parsed report payload
       def get_transaction_report(query_params = {})
         reconciliation.get_report(**query_params)
       end
 
+      # Retrieves a deterministic transaction snapshot for reconciliation.
+      #
+      # @param query_params [Hash] optional `:start_date` and `:end_date` filters
+      # @return [Array<Hash>, Hash] parsed snapshot payload
       def get_transaction_snapshot(query_params = {})
         reconciliation.get_snapshot(**query_params)
       end
 
-      # Verifies, deduplicates (inbox) and projects an incoming webhook.
+      # Verifies, deduplicates (inbox), and projects an incoming webhook.
       #
-      # @param payload [String, Hash] raw body or parsed payload
-      # @param signature_header [String] value of the signature header
-      # @param projection [#call] callable applied to the verified event
-      # @param inbox_store [Object, nil] overrides the default inbox store
-      # @return [Hash] processing result
+      # @param payload [String, Hash] raw JSON string or parsed hash payload
+      # @param signature_header [String] value of the webhook signature header
+      # @param projection [#apply!] projection object responding to `#apply!(inbox_entry:)`
+      # @param inbox_store [Payment::SDK::Webhooks::Domain::Ports::Inbox::Store, nil] custom inbox store
+      # @return [Hash] processing status (`:processed` or `:duplicate`) and inbox entry
       def process_webhook(payload:, signature_header:, projection:, inbox_store: nil)
         webhooks.process(
           payload: payload,
@@ -137,13 +158,13 @@ module Payment
         )
       end
 
-      # Compares local records against the remote snapshot and reports drift.
+      # Compares local records against the remote snapshot and reports any drift.
       #
-      # @param local_records [Array<Hash>] local projections to compare
-      # @param run_id [String] identifier of the reconciliation run
-      # @param snapshot_store [Object, nil] overrides the default snapshot store
-      # @param mismatch_reporter [Object, nil] overrides the default mismatch reporter
-      # @return [Object] reconciliation result
+      # @param local_records [Array<Hash>] local records to compare
+      # @param run_id [String] unique identifier of the reconciliation run
+      # @param snapshot_store [Payment::SDK::Reconciliation::Domain::Ports::Snapshot::Store, nil] custom snapshot store
+      # @param mismatch_reporter [Payment::SDK::Reconciliation::Domain::Ports::Mismatch::Reporter, nil] custom mismatch reporter
+      # @return [Array<Hash>] list of reconciliation snapshot entries
       def reconcile(local_records:, run_id:, snapshot_store: nil, mismatch_reporter: nil)
         reconciliation.reconcile(
           local_records: local_records,
@@ -188,12 +209,24 @@ module Payment
         parsed[:delivery_id]
       end
 
+      # Internal decorator that injects the `Authorization: Bearer <api_key>` header
+      # into outgoing HTTP requests.
       class AuthenticatedHttpClient
+        # @param adapter [Payment::SDK::Shared::Domain::Ports::Http::Client] underlying HTTP adapter
+        # @param api_key [String, nil] bearer API key
         def initialize(adapter, api_key)
           @adapter = adapter
           @api_key = api_key
         end
 
+        # Performs an authenticated HTTP request.
+        #
+        # @param method [Symbol, String] HTTP verb (`:get`, `:post`, `:put`, `:delete`)
+        # @param path [String] request path starting with `/`
+        # @param headers [Hash] custom HTTP headers
+        # @param body [Hash, nil] request body payload
+        # @param query_params [Hash] URL query string parameters
+        # @return [Object] parsed response body
         def request(method:, path:, headers: {}, body: nil, query_params: {})
           headers["Authorization"] = "Bearer #{@api_key}" if @api_key
           @adapter.request(method: method, path: path, headers: headers, body: body, query_params: query_params)

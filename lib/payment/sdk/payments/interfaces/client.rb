@@ -11,44 +11,46 @@ require "payment/sdk/payments/application/queries/lifecycles/get"
 module Payment
   module SDK
     module Payments
+      # Driving interface layer of the payments bounded context.
       module Interfaces
         # Entry point of the payments bounded context.
         #
-        # Exposes one resource per aggregate: {#intents}, {#charges} and {#attempts}.
+        # Exposes one resource per aggregate: {#intents}, {#charges}, and {#attempts}.
         class Client
-          # @return [#request] HTTP port used by the commands and queries
+          # @return [Payment::SDK::Shared::Domain::Ports::Http::Client] HTTP port used by commands and queries
           attr_reader :http_client
 
-          # @param http_client [#request] implementation of the HTTP client port
+          # @param http_client [Payment::SDK::Shared::Domain::Ports::Http::Client] HTTP client port implementation
           def initialize(http_client)
             @http_client = http_client
           end
 
-          # @return [IntentsResource]
+          # @return [IntentsResource] resource for creating, confirming, capturing, and querying payment intents
           def intents
             @intents ||= IntentsResource.new(@http_client)
           end
 
-          # @return [ChargesResource]
+          # @return [ChargesResource] resource for querying charges
           def charges
             @charges ||= ChargesResource.new(@http_client)
           end
 
-          # @return [AttemptsResource]
+          # @return [AttemptsResource] resource for querying payment attempts
           def attempts
             @attempts ||= AttemptsResource.new(@http_client)
           end
 
           # Commands and queries over payment intents.
           class IntentsResource
+            # @param http_client [Payment::SDK::Shared::Domain::Ports::Http::Client] HTTP client port
             def initialize(http_client)
               @http_client = http_client
             end
 
             # @param amount [Integer] amount in minor units
-            # @param currency [String] ISO 4217 code
-            # @param options [Hash] `:idempotency_key` is mandatory
-            # @return [Domain::Entities::PaymentIntent]
+            # @param currency [String] 3-letter ISO 4217 currency code
+            # @param options [Hash] extra options (`:idempotency_key` is mandatory)
+            # @return [Hash] parsed payment intent payload
             def create(amount:, currency:, **options)
               Application::Commands::Intents::Create.new(@http_client).call(
                 amount: amount,
@@ -57,10 +59,10 @@ module Payment
               )
             end
 
-            # @param id [String] payment intent id
-            # @param payment_method_token [String]
-            # @param options [Hash] `:idempotency_key` is mandatory
-            # @return [Domain::Entities::PaymentIntent]
+            # @param id [String] payment intent identifier
+            # @param payment_method_token [String] payment method token
+            # @param options [Hash] extra options (`:idempotency_key` is mandatory)
+            # @return [Hash] parsed payment intent payload
             def confirm(id, payment_method_token:, **options)
               Application::Commands::Intents::Confirm.new(@http_client).call(
                 id: id,
@@ -69,10 +71,10 @@ module Payment
               )
             end
 
-            # @param id [String] payment intent id
-            # @param amount [Integer, nil] nil captures the full amount
-            # @param options [Hash] `:idempotency_key` is mandatory
-            # @return [Domain::Entities::PaymentIntent]
+            # @param id [String] payment intent identifier
+            # @param amount [Integer, nil] amount to capture; `nil` captures the full amount
+            # @param options [Hash] extra options (`:idempotency_key` is mandatory)
+            # @return [Hash] parsed payment intent payload
             def capture(id, amount: nil, **options)
               Application::Commands::Intents::Capture.new(@http_client).call(
                 id: id,
@@ -81,14 +83,14 @@ module Payment
               )
             end
 
-            # @param id [String] payment intent id
-            # @return [Domain::Entities::PaymentIntent]
+            # @param id [String] payment intent identifier
+            # @return [Hash] parsed payment intent payload
             def get(id)
               Application::Queries::Intents::Get.new(@http_client).call(id: id)
             end
 
-            # @param id [String] payment intent id
-            # @return [Object] lifecycle view of the intent
+            # @param id [String] payment intent identifier
+            # @return [Hash] parsed lifecycle view of the intent
             def get_lifecycle(id)
               Application::Queries::Lifecycles::Get.new(@http_client).call(id: id)
             end
@@ -96,12 +98,13 @@ module Payment
 
           # Queries over charges.
           class ChargesResource
+            # @param http_client [Payment::SDK::Shared::Domain::Ports::Http::Client] HTTP client port
             def initialize(http_client)
               @http_client = http_client
             end
 
-            # @param id [String] charge id
-            # @return [Domain::Entities::Charge]
+            # @param id [String] charge identifier
+            # @return [Hash] parsed charge payload
             def get(id)
               Application::Queries::Charges::Get.new(@http_client).call(id: id)
             end
@@ -109,12 +112,13 @@ module Payment
 
           # Queries over payment attempts.
           class AttemptsResource
+            # @param http_client [Payment::SDK::Shared::Domain::Ports::Http::Client] HTTP client port
             def initialize(http_client)
               @http_client = http_client
             end
 
-            # @param id [String] payment attempt id
-            # @return [Domain::Entities::PaymentAttempt]
+            # @param id [String] payment attempt identifier
+            # @return [Hash] parsed payment attempt payload
             def get(id)
               Application::Queries::Attempts::Get.new(@http_client).call(id: id)
             end

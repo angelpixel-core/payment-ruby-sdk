@@ -12,11 +12,20 @@ module Payment
   module SDK
     module Infrastructure
       module Adapters
+        # HTTP transport adapters and response error mappers.
         module Http
+          # HTTP client adapter implementations.
           module Client
+            # Standard-library `Net::HTTP` adapter with automatic exponential backoff
+            # and jitter retries on {Payment::SDK::NetworkError}, {Payment::SDK::TimeoutError},
+            # and {Payment::SDK::UpstreamError}.
             class NetHttp
               include Payment::SDK::Shared::Domain::Ports::Http::Client
 
+              # @param base_url [String] base URL of the API (trailing slash is stripped)
+              # @param open_timeout [Numeric] connection open timeout in seconds
+              # @param read_timeout [Numeric] read timeout in seconds
+              # @param max_retries [Integer] maximum number of retry attempts
               def initialize(base_url:, open_timeout: 30, read_timeout: 80, max_retries: 2)
                 @base_url = base_url.sub(%r{/$}, "")
                 @open_timeout = open_timeout
@@ -24,6 +33,18 @@ module Payment
                 @max_retries = max_retries
               end
 
+              # Performs an HTTP request with automatic retries on transient errors.
+              #
+              # @param method [Symbol, String] HTTP method (`:get`, `:post`, `:put`, `:delete`)
+              # @param path [String] relative endpoint path
+              # @param headers [Hash] custom HTTP headers
+              # @param body [Hash, nil] optional request body serialized as JSON
+              # @param query_params [Hash] optional URL query parameters
+              # @return [Hash, Array, String, nil] parsed JSON response with symbolized keys, raw body, or `nil`
+              # @raise [ArgumentError] when `method` is unsupported
+              # @raise [Payment::SDK::ApiError] when the server responds with a non-2xx status
+              # @raise [Payment::SDK::TimeoutError] when the request times out after retries
+              # @raise [Payment::SDK::NetworkError] when a socket/transport error persists after retries
               def request(method:, path:, headers: {}, body: nil, query_params: {})
                 uri = build_uri(path, query_params)
                 req = build_request(method, uri, headers, body)

@@ -7,8 +7,12 @@ module Payment
     module Payments
       module Application
         module Queries
+          # Queries operating on payment attempts.
           module Attempts
+            # Query that fetches a payment attempt by ID (`GET /payment_attempts/:id`).
             class Get < Shared::Application::BaseQuery
+              # @param id [String] payment attempt identifier (`pa_...`)
+              # @return [Hash] parsed payment attempt payload
               def call(id:)
                 http_client.request(
                   method: :get,

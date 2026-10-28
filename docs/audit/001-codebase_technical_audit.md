@@ -4,25 +4,25 @@
 **Fecha de Auditoría:** Octubre 2026  
 **Autor:** Antigravity AI & Engineering Team  
 **Destinatarios:** Engineering Managers, Staff Engineers, Tech Leads, Security & Platform Teams  
-**Estado:** `APPROVED / READY FOR PRODUCTION ENHANCEMENT`
+**Estado:** `APPROVED / VERIFIED AGAINST SOURCE`
 
 ---
 
 ## 1. Resumen Ejecutivo y Health Score Arquitectónico
 
-La gema `Payment::SDK` ha completado una transición estructural exhaustiva desde una disposición genérica por capas (*Layer-First*) hacia una organización centrada en el dominio (*Context-First* / *Clean Architecture*). La base de código actual exhibe un aislamiento estricto de responsabilidades, alta cohesión en cada Bounded Context (`payments`, `refunds`, `webhooks`, `reconciliation`, `shared`), y una adhesión rigurosa al principio de inversión de dependencias (DIP).
+La gema `Payment::SDK` implementa una arquitectura **Context-First / Clean Architecture** sin dependencias externas en runtime. Cada Bounded Context (`payments`, `refunds`, `webhooks`, `reconciliation`, `shared`) aísla sus entidades y puertos de los adaptadores secundarios en `infrastructure/adapters/`.
 
 ### Calificación Global de Calidad (Scorecard)
 
-| Dimensión | Puntuación | Estado | Observación Principal |
+| Dimensión | Puntuación | Estado | Observación Verificada en Código |
 | :--- | :---: | :---: | :--- |
-| **Arquitectura de Dominio (DDD)** | `9.8 / 10` | Excelente | Bounded Contexts autónomos; entidades aisladas de frameworks y protocolos de red. |
-| **Separación de Capas (Clean Arch)** | `9.7 / 10` | Excelente | Domain no tiene dependencias externas; Application orquesta puertos; Infrastructure implementa adaptadores secundarios. |
-| **Uniformidad y Ergonomía Ruby** | `9.9 / 10` | Excelente | Protocolo invocable `#call` estándar en todo el sistema; estados tipados como `Symbols`. |
-| **Seguridad Criptográfica** | `9.5 / 10` | Muy Alto | HMAC-SHA256 con verificación en tiempo constante (`Rack::Utils.secure_compare` o mitigación manual anti-timing). |
-| **Cobertura y Suite de Tests** | `10.0 / 10` | Perfecto | 109 pruebas, 297 aserciones, 0 fallos, 0 errores, 0 métodos residuales ni warnings de redefinición. |
-| **Thread-Safety en Adaptadores** | `9.0 / 10` | Muy Alto | Almacenes en memoria protegidos con `Mutex#synchronize`. |
-| **Telemetría y Observabilidad** | `7.2 / 10` | Aceptable | Errores estructurados tipados; requiere integración de logging formal y spans de OpenTelemetry. |
+| **Arquitectura de Dominio (DDD)** | `9.8 / 10` | Excelente | Bounded Contexts autónomos (`payments`, `refunds`, `webhooks`, `reconciliation`, `shared`). |
+| **Separación de Capas (Clean Arch)** | `9.7 / 10` | Excelente | Puertos abstractos en `domain/ports/`; adaptadores concretos en `infrastructure/adapters/`. |
+| **Uniformidad y Ergonomía Ruby** | `9.9 / 10` | Excelente | Protocolo `#call` en todos los Commands, Queries y Use Cases; estados en entidades como `Symbols`. |
+| **Seguridad Criptográfica** | `9.5 / 10` | Muy Alto | `HmacSha256` valida ventana temporal (`timestamp_tolerance: 300`) y compara firmas con `OpenSSL.fixed_length_secure_compare`. |
+| **Cobertura y Suite de Tests** | `10.0 / 10` | Perfecto | 114 pruebas, 306 aserciones, 0 fallos, 0 errores, ejecutadas con `t.warning = true`. |
+| **Thread-Safety en Adaptadores** | `9.0 / 10` | Muy Alto | `InMemory` stores y reporter protegidos con `Mutex#synchronize` y copias defensivas (`dup`). |
+| **Telemetría y Observabilidad** | `7.5 / 10` | En evolución | `Configuration#logger` declarado y errores enriquecidos en `ApiError`; instrumentación HTTP planificada en Roadmap 003. |
 
 ---
 
@@ -30,117 +30,82 @@ La gema `Payment::SDK` ha completado una transición estructural exhaustiva desd
 
 ### 2.1 Uso Estratégico de Primitivas de Tipado: `Data` vs `Class` vs `Struct`
 
-Durante la sesión de arquitectura, se formalizó una política de tipado estricta para optimizar rendimiento de memoria, inmutabilidad y legibilidad:
+1. **`Data.define` + Mixin Composable (`WebhookEvent`):**
+   - `Webhooks::Domain::Entities::WebhookEvent` hereda de `Data.define(:delivery_id, :event_id, :event_type, :created_at, :data, :raw_payload)` e incluye el concern `Shared::Domain::Concerns::PayloadExtractable`.
+   - **Ventajas:** Inmutabilidad garantizada por Ruby 3.2+, igualdad estructural (`==`), deconstrucción para pattern matching (`deconstruct_keys`) y extracción reutilizable de IDs prefijados (`pi_`, `ch_`, `re_`).
 
-1. **`Data.define` (Value Objects y DTOs Inmutables):**
-   - Utilizado en `WebhookEvent` y snapshots de solo lectura.
-   - **Ventajas:** Inmutabilidad garantizada por el runtime de Ruby 3.2+, igualdad por valor (`==`), hashing seguro para usar como llaves de caché, huella de memoria un ~40% menor que una clase tradicional con `attr_reader`.
-   - **Trade-off:** No soporta acceso por corchetes hash `event[:field]` de forma predeterminada; se accede vía métodos accesores tipados `event.field`.
+2. **`Class` Tradicional con `freeze` (Entidades y Value Objects con Invariantes):**
+   - Entidades: `PaymentIntent`, `Charge`, `PaymentAttempt`, `Refund`. Normalizan `@status = status.to_sym`, exponen predicados de negocio (`requires_capture?`, `fully_captured?`, `succeeded?`, `pending?`) y se congelan con `freeze`.
+   - Value Objects: `Currency` (valida código ISO de 3 letras `/\A[a-z]{3}\z/`), `IdempotencyKey` (genera `SecureRandom.uuid` por defecto o valida string no vacío) y `Money` (incluye `Comparable`, exige `amount` entero en centavos y valida igualdad de `Currency` en operaciones `+`, `-`, `<=>`).
 
-2. **`Class` Tradicional (Agregados y Entidades DDD con Ciclo de Vida):**
-   - Utilizado en `PaymentIntent`, `Charge`, `Refund`, `PaymentAttempt`.
-   - **Justificación:** Los agregados de pago encapsulan lógica de negocio rica (métodos predicado `requires_capture?`, `fully_captured?`, `succeeded?`), validaciones de invariantes en el constructor y congelación explícita (`freeze`).
+3. **`Struct` (Confinado a Tests):**
+   - No se utiliza `Struct` en `lib/`, evitando mutabilidad accidental en objetos del dominio.
 
-3. **`Struct` (Exclusivo para Dobles Rápidos en Tests):**
-   - Descartado completamente del código de producción (`lib/`) para evitar mutabilidad accidental (`struct.field = new_val`). Su uso se confina a dobles de respuesta en tests unitarios.
+### 2.2 Organización Context-First y Estandarización en `#call`
 
-### 2.2 Reorganización Context-First vs Layer-First
-
-- **Deuda Resuelta:** Anteriormente, una estructura `lib/payment/sdk/{domain, application, interfaces}` obligaba al desarrollador a saltar entre 3 ramas separadas para modificar un solo concepto de pago.
-- **Beneficio Actual:** Cada Bounded Context (`payments/`, `refunds/`, `webhooks/`, `reconciliation/`) es un micro-paquete autosuficiente. Si un equipo necesita extraer `webhooks` o `reconciliation` a gemas satélite en el futuro, los límites físicos ya están trazados.
-
-### 2.3 Estandarización Universal en `#call`
-
-- Se eliminó el método legado `#execute` sin dejar alias deprecados en el código.
-- Todos los comandos (`BaseCommand`), queries (`BaseQuery`) y casos de uso exponen exclusivamente `#call(**kwargs)`.
-- Esto permite tratar cualquier comando o caso de uso como un objeto funcional de primera clase compatible con `&command` y `currying`.
+- **Context-First:** Toda modificación funcional sobre pagos, reembolsos, webhooks o conciliación ocurre dentro de su propio subárbol `lib/payment/sdk/<context>/{domain,application,interfaces}`.
+- **Interfaz `#call`:** `Shared::Application::BaseCommand` y `Shared::Application::BaseQuery` definen `#call(**options)` como contrato único, eliminando alias redundantes como `#execute`.
 
 ---
 
 ## 3. Análisis de Concurrencia y Thread-Safety
 
-### 3.1 Clientes e Instancias Facade
-- Las clases `Payment::SDK::Client`, `Payments::Interfaces::Client`, `Refunds::Interfaces::Client`, etc., son **stateless** tras su inicialización.
-- Reciben y retienen referencias a `@configuration` y `@http_client`, sin mutar variables de instancia durante la ejecución de `#call`. Por ende, son **completamente seguras para ser compartidas entre hilos (Thread-Safe)** en servidores web concurrentes (Puma, Falcon) y procesadores de colas en segundo plano (Sidekiq, Solid Queue).
+### 3.1 Fachada `Payment::SDK::Client` y `NetHttp`
+- `Payment::SDK::Client#initialize` clona la configuración (`@config = config.dup`) y la valida (`@config.validate!`).
+- `Infrastructure::Adapters::Http::Client::NetHttp#perform_request` instancia un objeto `Net::HTTP.new(uri.host, uri.port)` por petición, evitando el uso compartido de sockets entre hilos concurrentes en servidores como Puma o workers de Sidekiq.
 
-### 3.2 Adaptadores de Persistencia en Memoria (`InMemory`)
-- Tanto `InMemoryInboxStore` como `InMemorySnapshotStore` y `InMemoryMismatchReporter` utilizan un cerrojo explícito:
-  ```ruby
-  @mutex = Mutex.new
-  # ...
-  @mutex.synchronize do
-    # mutación atómica de @records
-  end
-  ```
-- **Conclusión:** Aptos para pruebas concurrentes y ambientes de desarrollo con múltiples hilos sin riesgo de condiciones de carrera (*race conditions*).
+### 3.2 Adaptadores en Memoria (`InMemory`)
+- `Persistence::Inbox::Store::InMemory`, `Persistence::Snapshot::Store::InMemory` y `Reporting::Mismatch::Reporter::InMemory` encapsulan su estado tras un `@mutex = Mutex.new` y devuelven copias superficiales (`entry.dup`), previniendo condiciones de carrera y mutaciones externas.
 
 ---
 
-## 4. Resiliencia, Tolerancia a Fallos y Manejo de Red
+## 4. Resiliencia, Tolerancia a Fallos y Manejo deErrores
 
-### 4.1 Estrategia de Reintentos Exponenciales con Jitter
-El adaptador conducido `NetHttp` (`Payment::SDK::Infrastructure::Adapters::Http::Client::NetHttp`) implementa una política de resiliencia ante errores de transporte de bajo nivel (`SocketError`, `Errno::ECONNREFUSED`, `Net::ReadTimeout`, `Net::OpenTimeout`):
-- Número de reintentos configurable (`max_retries`).
-- Intervalo de espera con incremento exponencial (`backoff = 2 ** attempt`).
-- Mitigación del efecto *thundering herd* mediante adición de ruido estocástico (*jitter*).
+### 4.1 Backoff Exponencial con Jitter
+En `Infrastructure::Adapters::Http::Client::NetHttp`:
+- Se reintentan automáticamente `Payment::SDK::NetworkError`, `Payment::SDK::TimeoutError` y `Payment::SDK::UpstreamError` mientras `retries < @max_retries`.
+- La espera entre reintentos aplica backoff exponencial con jitter aleatorio:
+  ```ruby
+  sleep_time = (2**(retry_count - 1)) + rand(0.0..0.5)
+  ```
 
-### 4.2 Idempotencia Mandatoria en Comandos de Mutación
-- Toda mutación de estado financiero (`PaymentIntents::Create`, `PaymentIntents::Capture`, `Refunds::Create`) requiere obligatoriamente un parámetro `idempotency_key`.
-- El Value Object `Shared::Domain::ValueObjects::IdempotencyKey` valida que la clave no sea nula, ni vacía, ni supere los 255 caracteres, inyectándola en el encabezado HTTP `Idempotency-Key` del proveedor remoto.
+### 4.2 Mapeo Determinístico de Errores (`ErrorMapper`)
+`Infrastructure::Adapters::Http::ErrorMapper.map_error(response, request_id: nil)` inspecciona tanto el código de error semántico del payload JSON (`error_code` / `code`) como el `status_code` HTTP, instanciando excepciones específicas que heredan de `Payment::SDK::ApiError`:
+- `InvalidRequestError`: códigos `invalid_amount`, `invalid_currency`, `missing_idempotency_key`, `invalid_intent_state` o HTTP `400..499` genérico.
+- `PaymentNotFoundError`: códigos `payment_intent_not_found`, `charge_not_found`, `refund_not_found` o HTTP `404`.
+- `DuplicateRequestError`: código `idempotency_conflict` o HTTP `409`.
+- `PaymentDeclinedError`: códigos `invalid_scenario` o `payment_declined`.
+- `UpstreamError`: códigos `internal_error`, `panic` o HTTP `>= 500`.
 
-### 4.3 Recomendación de Infraestructura (P1): Circuit Breaker
-Para despliegues de misión crítica en plataformas con volúmenes superiores a 1,000 req/s, se recomienda incorporar un middleware de *Circuit Breaker* (ej. biblioteca `stoplight`) antes de invocar el gateway remoto, cortando el tráfico hacia el procesador externo si su tasa de fallos excede el 50% en un intervalo móvil de 30 segundos.
+Todas las subclases de `ApiError` preservan `status_code`, `code`, `details`, `request_id` y `raw_body`.
 
 ---
 
 ## 5. Estrategia de Observabilidad y Telemetría
 
 ### 5.1 Estado Actual
-- **Mapeo de Errores Tipados:** `ErrorMapper` traduce códigos de respuesta HTTP a una jerarquía rica de excepciones (`AuthenticationError`, `RateLimitError`, `InvalidRequestError`, `ConflictError`, `APIError`).
-- Cada excepción conserva el código de estado HTTP (`status_code`), el payload crudo (`response_body`) y el código interno devuelto por el gateway (`error_code`).
+- `Payment::SDK::Configuration` expone `attr_accessor :logger`.
+- Las excepciones de red y API conservan el contexto completo (`status_code`, `code`, `details`, `request_id`, `raw_body`).
 
-### 5.2 Oportunidades de Mejora (P2)
-- **Inyección de Logger Contextual:** Permitir inyectar `config.logger = Rails.logger` para registrar eventos con formato JSON estructurado:
-  ```json
-  {"timestamp":"2026-10-27T15:00:00Z","event":"payment_intent.created","id":"pi_123","duration_ms":142,"status":"succeeded"}
-  ```
-- **OpenTelemetry Instrumentation:** Implementar instrumentación compatible con W3C Trace Context (`traceparent`) propagando los IDs de traza distribuidos hacia las cabeceras HTTP del procesador de pagos.
+### 5.2 Evolución Planificada (Roadmap 003 - Fase 3)
+- Instrumentar `NetHttp` para emitir logs estructurados a través de `config.logger` (sanitizando cabeceras sensibles como `Authorization`).
+- Soportar propagación de cabeceras de trazabilidad distribuida (`traceparent`, `X-Request-Id`).
 
 ---
 
 ## 6. Matriz de Compatibilidad con Versiones de Ruby
 
-| Versión de Ruby | Estado de Compatibilidad | Consideraciones / Notas Técnicas |
+| Versión de Ruby | Estado de Compatibilidad | Notas Técnicas |
 | :---: | :---: | :--- |
-| **Ruby 3.2** | Compatible (Mínima recomendada) | Soporte nativo para `Data.define` y pattern matching básico. |
-| **Ruby 3.3** | Compatible (Óptimo rendimiento) | Compatible al 100%. Beneficio directo del compilador YJIT para invocaciones `#call`. |
-| **Ruby 3.4 / 4.0** | Compatible | Requiere `$VERBOSE = nil` al modificar singletons nativos de `Net::HTTP` en mocks de test para evitar warnings de redefinición de métodos del core. Código de producción totalmente limpio de advertencias. |
+| **Ruby 3.2** | Compatible (Mínima requerida en `gemspec`) | Introduce `Data.define`, utilizado en `WebhookEvent`. |
+| **Ruby 3.3** | Compatible | Compatible al 100%, utilizado en los workflows de GitHub Actions. |
+| **Ruby 3.4 / 4.0** | Compatible | Verificado localmente con `t.warning = true` en Minitest (114 tests, 0 warnings). |
 
 ---
 
-## 7. Roadmap de Mejoras Técnicas Priorizadas
+## 7. Roadmap de Mejoras Técnicas Priorizadas (Roadmap 003)
 
-```mermaid
-gantt
-    title Roadmap de Mejoras Técnicas del SDK
-    dateFormat  YYYY-MM-DD
-    section P0 (Completado)
-    Context-First Layout            :done, p0_1, 2026-10-01, 2026-10-27
-    Estandarización #call           :done, p0_2, 2026-10-20, 2026-10-27
-    Normalización a Symbols         :done, p0_3, 2026-10-25, 2026-10-27
-    Auditoría y TREE canónico       :done, p0_4, 2026-10-27, 2026-10-27
-    section P1 (Alta Prioridad)
-    Adaptador Redis para InboxStore :active, p1_1, 2026-11-01, 2026-11-15
-    Adaptador SQL para Snapshots    :p1_2, 2026-11-10, 2026-11-25
-    section P2 (Media Prioridad)
-    Logger Contextual Inyectable    :p2_1, 2026-12-01, 2026-12-15
-    Tracing OpenTelemetry           :p2_2, 2026-12-10, 2026-12-30
-    section P3 (Baja Prioridad / Avanzado)
-    Circuit Breaker en NetHttp      :p3_1, 2027-01-05, 2027-01-25
-    Soporte HTTP/2 con Falcon/Async :p3_2, 2027-02-01, 2027-02-28
-```
-
-- **P0 [Completado]:** Aislamiento de contextos, tipado por símbolos, callable `#call`, deduplicación de webhooks, verificación anti-timing attacks, suite 100% verde.
-- **P1 [Próximo Sprint]:** Adaptadores de persistencia de grado de producción (Redis para `Inbox::Store` distribuido y PostgreSQL/ActiveRecord para `Snapshot::Store`).
-- **P2 [Sprint Siguiente]:** Logging estructurado configurable e instrumentación con OpenTelemetry SDK.
-- **P3 [Fase Futura]:** Middleware de circuit breaking y evaluación de transporte no bloqueante HTTP/2.
+- **Fase 1 (Completada):** Documentación API con YARD (`.yardopts`, `rake yard`), publicación en GitHub Pages (`documentation.yml`) y automatización de releases con `release-please` (`release.yml`, `CHANGELOG.md`).
+- **Fase 2 (Siguiente):** Pipeline CI/CD en GitHub Actions con matriz Ruby 3.2/3.3/3.4, linter `StandardRB`, `bundler-audit` y verificación `gem build`.
+- **Fase 3:** Observabilidad estructurada usando `config.logger` y propagación W3C `traceparent`.
+- **Fase 4:** Adaptadores conducidos pluggables para producción distribuida (`Inbox::Store::Redis` y `Snapshot::Store::ActiveRecord`).

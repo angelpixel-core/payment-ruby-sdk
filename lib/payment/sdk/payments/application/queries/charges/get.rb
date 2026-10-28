@@ -7,8 +7,12 @@ module Payment
     module Payments
       module Application
         module Queries
+          # Queries operating on charges.
           module Charges
+            # Query that fetches a charge by ID (`GET /charges/:id`).
             class Get < Shared::Application::BaseQuery
+              # @param id [String] charge identifier (`ch_...`)
+              # @return [Hash] parsed charge payload
               def call(id:)
                 http_client.request(
                   method: :get,

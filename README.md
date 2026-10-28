@@ -1,13 +1,12 @@
 # Payment Ruby SDK (`Payment::SDK`)
 
-[![Ruby Version](https://img.shields.io/badge/ruby-3.2%20%7C%203.3%20%7C%203.4-red.svg)](https://www.ruby-lang.org)
+[![Ruby Version](https://img.shields.io/badge/ruby-%3E%3D%203.2-red.svg)](https://www.ruby-lang.org)
 [![Architecture](https://img.shields.io/badge/architecture-Clean%20%2F%20Context--First-blue.svg)](docs/ARCHITECTURE.md)
-[![Tests](https://img.shields.io/badge/tests-109%20passed%20%2F%200%20failures-brightgreen.svg)](test/)
-[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](test/)
+[![Tests](https://img.shields.io/badge/tests-114%20passed%20%2F%200%20failures-brightgreen.svg)](test/)
 [![Audit Score](https://img.shields.io/badge/audit%20health-9.8%2F10-blueviolet.svg)](docs/audit/001-codebase_technical_audit.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-SDK idiomático en Ruby de **grado enterprise y cero dependencias externas**, diseñado bajo los principios de **Clean Architecture**, **Hexagonal Architecture (Ports & Adapters)**, **Domain-Driven Design (DDD)**, **Bounded Contexts**, y segregación **CQRS**.
+SDK idiomático en Ruby de **cero dependencias externas en runtime**, diseñado bajo los principios de **Clean Architecture**, **Hexagonal Architecture (Ports & Adapters)**, **Domain-Driven Design (DDD)**, **Bounded Contexts** y segregación **CQRS**.
 
 ---
 
@@ -22,23 +21,23 @@ SDK idiomático en Ruby de **grado enterprise y cero dependencias externas**, di
    - [5.2 Bounded Context: Reembolsos (`refunds`)](#52-bounded-context-reembolsos-refunds)
    - [5.3 Bounded Context: Webhooks con Transactional Inbox (`webhooks`)](#53-bounded-context-webhooks-con-transactional-inbox-webhooks)
    - [5.4 Bounded Context: Conciliación Financiera (`reconciliation`)](#54-bounded-context-conciliación-financiera-reconciliation)
-6. [Manejo de Errores y Tipado de Excepciones](#6-manejo-de-errores-y-tipado-de-excepciones)
+6. [Manejo de Errores y Jerarquía de Excepciones](#6-manejo-de-errores-y-jerarquía-de-excepciones)
 7. [Concurrencia y Thread-Safety](#7-concurrencia-y-thread-safety)
-8. [Auditoría Técnica y Buenas Prácticas](#8-auditoría-técnica-y-buenas-prácticas)
-9. [Guía de Desarrollo y Pruebas](#9-guía-de-desarrollo-y-pruebas)
+8. [Auditoría Técnica y Estructura del Proyecto](#8-auditoría-técnica-y-estructura-del-proyecto)
+9. [Guía de Desarrollo, Pruebas y Documentación YARD](#9-guía-de-desarrollo-pruebas-y-documentación-yard)
 
 ---
 
 ## 1. Visión General y Principios de Diseño
 
-El `Payment::SDK` proporciona a plataformas financieras y servicios e-commerce una capa cliente robusta, predecible y altamente mantenible:
+El `Payment::SDK` proporciona una capa cliente modular, predecible y mantenible para integrarse con la API v1 de la plataforma de pagos:
 
-- **Cero Dependencias Externas:** Construido 100% sobre la biblioteca estándar de Ruby (`net/http`, `openssl`, `json`).
-- **Organización Context-First:** Cada Bounded Context encapsula físicamente su propio `domain/`, `application/` e `interfaces/`.
-- **Protocolo Invocable `#call` Estándar:** Todos los comandos, consultas y casos de uso implementan la interfaz funcional `#call`, unificando la ergonomía de Ruby.
-- **Normalización a Symbols:** Los estados del dominio (`:succeeded`, `:requires_capture`, `:failed`, etc.) son símbolos inmutables para comparaciones $O(1)$ eficientes.
-- **Idempotencia Mandatoria:** Toda mutación de saldo exige una clave de idempotencia validada desde el dominio.
-- **Deduplicación de Webhooks:** Patrón *Transactional Inbox* integrado con validación de firmas criptográficas HMAC-SHA256 resistente a ataques de temporización (*timing attacks*).
+- **Cero Dependencias Externas en Runtime:** Construido 100% sobre la biblioteca estándar de Ruby (`net/http`, `openssl`, `json`, `securerandom`, `time`, `uri`).
+- **Organización Context-First:** Cada Bounded Context (`payments`, `refunds`, `webhooks`, `reconciliation`, `shared`) encapsula físicamente su propio `domain/`, `application/` e `interfaces/`.
+- **Protocolo Invocable `#call` Estándar:** Todos los comandos (`BaseCommand`), consultas (`BaseQuery`) y casos de uso implementan `#call`.
+- **Normalización a Symbols:** Los estados de las entidades de dominio (`:succeeded`, `:requires_capture`, `:failed`, `:pending`, etc.) se normalizan a `Symbol`.
+- **Idempotencia Mandatoria en Mutaciones:** Todo comando de mutación exige `idempotency_key` validado mediante el Value Object `Shared::Domain::ValueObjects::IdempotencyKey` e inyectado en el header `Idempotency-Key`.
+- **Deduplicación de Webhooks:** Patrón *Transactional Inbox* integrado con verificación criptográfica HMAC-SHA256 en tiempo constante (`OpenSSL.fixed_length_secure_compare`) y validación de ventana temporal (`timestamp_tolerance`).
 
 ---
 
@@ -70,7 +69,7 @@ graph TD
         RefundsDomain["refunds/domain/ (Entities: Refund)"]
         WebhooksDomain["webhooks/domain/ (Entities: WebhookEvent, Ports: Inbox::Store, Signature::Verifier)"]
         ReconciliationDomain["reconciliation/domain/ (Ports: Snapshot::Store, Mismatch::Reporter)"]
-        SharedDomain["shared/domain/ (ValueObjects: Money, Currency, IdempotencyKey, Ports: Http::Client)"]
+        SharedDomain["shared/domain/ (ValueObjects: Money, Currency, IdempotencyKey, Concerns: PayloadExtractable, Ports: Http::Client)"]
     end
 
     subgraph DrivenAdapters ["Driven / Secondary Adapters (Infrastructure)"]
@@ -113,10 +112,10 @@ Agrega la gema a tu `Gemfile`:
 gem "payment-sdk", "~> 0.1.0"
 ```
 
-O instálala directamente vía terminal:
+E instala las dependencias con Bundler:
 
 ```bash
-gem install payment-sdk
+bundle install
 ```
 
 ---
@@ -132,23 +131,27 @@ Payment::SDK.configure do |config|
   config.api_key        = ENV.fetch("PAYMENT_API_KEY")
   config.signing_secret = ENV.fetch("PAYMENT_SIGNING_SECRET")
   config.base_url       = ENV.fetch("PAYMENT_BASE_URL", "https://api.payment.com")
-  config.timeout        = 10 # Tiempo máximo de espera de lectura HTTP (segundos)
-  config.open_timeout   = 5  # Tiempo máximo de apertura de conexión socket (segundos)
-  config.max_retries    = 3  # Reintentos automáticos con backoff exponencial y jitter
+  config.timeout        = 10 # Read timeout HTTP en segundos (por defecto: 10)
+  config.open_timeout   = 5  # Connection timeout en segundos (por defecto: 5)
+  config.max_retries    = 2  # Reintentos ante fallos de red/5xx con backoff exponencial y jitter (por defecto: 2)
 end
 ```
 
 ### Instanciación del Cliente
-Puedes utilizar el singleton preconfigurado o instanciar clientes aislados (ideal para arquitecturas multi-tenant):
+
+Puedes usar la configuración global o pasar una instancia específica de `Payment::SDK::Configuration` (útil para entornos multi-tenant):
 
 ```ruby
-# Cliente global con configuración por defecto
+# Usando la configuración global
 client = Payment::SDK::Client.new
 
-# Cliente aislado con configuración específica
+# Usando una configuración aislada por tenant
 custom_config = Payment::SDK::Configuration.new
-custom_config.api_key = "sk_live_custom_tenant_key"
-custom_client = Payment::SDK::Client.new(configuration: custom_config)
+custom_config.api_key        = "sk_live_tenant_key"
+custom_config.signing_secret = "whsec_tenant_secret"
+custom_config.base_url       = "https://api.payment.com"
+
+tenant_client = Payment::SDK::Client.new(custom_config)
 ```
 
 ---
@@ -157,103 +160,110 @@ custom_client = Payment::SDK::Client.new(configuration: custom_config)
 
 ### 5.1 Bounded Context: Pagos (`payments`)
 
-Manejo del ciclo de vida de cobros, autorizaciones diferidas y capturas:
+El sub-cliente `client.payments` expone los recursos `intents`, `charges` y `attempts` (además de los métodos delegados en la fachada raíz `client`):
 
 ```ruby
-# 1. Crear un intento de pago (PaymentIntent)
-intent = client.payments.create_intent(
-  amount: 5000,                                 # $50.00 USD (en centavos enteros)
-  currency: "usd",
+# 1. Crear un PaymentIntent (valida Money e IdempotencyKey antes de enviar por red)
+intent = client.payments.intents.create(
+  amount: 5000,                                 # Monto en centavos enteros ($50.00 USD)
+  currency: "usd",                              # Código ISO 4217 de 3 letras
   customer_id: "cus_987654",
   merchant_id: "mer_123456",
-  capture_method: "manual",                     # 'manual' o 'automatic'
-  idempotency_key: "checkout_order_45892_token" # Obligatorio para mutaciones
+  capture_method: "manual",                     # "automatic" (default) o "manual"
+  idempotency_key: "checkout_order_45892_token",
+  metadata: { order_id: "45892" }
 )
 
-puts "Intent ID: #{intent.id}, Status: #{intent.status}" # :requires_confirmation
-
-# 2. Confirmar el pago con un método suministrado
-confirmed = client.payments.confirm_intent(
-  intent_id: intent.id,
-  payment_method_id: "pm_card_visa_tok",
-  idempotency_key: "confirm_order_45892_token"
+# 2. Confirmar un PaymentIntent con un token de método de pago
+confirmed = client.payments.intents.confirm(
+  intent[:id],
+  payment_method_token: "pm_card_visa_tok",
+  idempotency_key: "confirm_order_45892_token",
+  scenario: "happy_path"                        # Opcional: header X-Sandbox-Scenario
 )
 
-if confirmed.requires_capture?
-  # 3. Capturar fondos previamente autorizados
-  captured = client.payments.capture_intent(
-    intent_id: intent.id,
-    amount_to_capture: 5000,
-    idempotency_key: "capture_order_45892_token"
-  )
-  puts "Pago exitoso: #{captured.succeeded?}" # true
-end
+# 3. Capturar fondos autorizados (total o parcialmente)
+captured = client.payments.intents.capture(
+  intent[:id],
+  amount: 5000,
+  idempotency_key: "capture_order_45892_token"
+)
 
 # 4. Consultas de solo lectura (CQS Read)
-current_intent = client.payments.get_intent(id: intent.id)
-charge_detail  = client.payments.get_charge(id: "ch_abc123")
-attempts_list  = client.payments.list_attempts(intent_id: intent.id)
-lifecycle_view = client.payments.get_lifecycle(intent_id: intent.id)
+fetched_intent = client.payments.intents.get(intent[:id])
+lifecycle      = client.payments.intents.get_lifecycle(intent[:id])
+charge         = client.payments.charges.get("ch_abc123")
+attempt        = client.payments.attempts.get("pa_abc123")
+
+# Equivalentes directos en la fachada raíz:
+# client.create_payment_intent(amount: 5000, currency: "usd", idempotency_key: "...")
+# client.confirm_payment_intent("pi_123", payment_method_token: "pm_...", idempotency_key: "...")
+# client.capture_payment_intent("pi_123", amount: 5000, idempotency_key: "...")
+# client.get_payment_intent("pi_123")
+# client.get_payment_lifecycle("pi_123")
 ```
 
 ---
 
 ### 5.2 Bounded Context: Reembolsos (`refunds`)
 
-Gestión de devoluciones totales o parciales sobre cargos efectuados:
+Gestión de reembolsos totales o parciales sobre un cargo:
 
 ```ruby
 # 1. Emitir un reembolso sobre un Charge existente
-refund = client.refunds.create_refund(
+refund = client.refunds.create(
   charge_id: "ch_abc123",
-  amount: 2500,                         # Reembolso parcial de $25.00 USD
-  reason: "customer_requested_return",
+  amount: 2500,                                 # Opcional (nil reembolsa el total)
+  reason: "requested_by_customer",
   idempotency_key: "refund_tx_99812_token"
 )
 
-puts "Refund ID: #{refund.id}, Status: #{refund.status}" # :succeeded
-puts "Reembolso completado: #{refund.succeeded?}"        # true
-
 # 2. Consultar un reembolso por ID
-fetched_refund = client.refunds.get_refund(id: refund.id)
+fetched_refund = client.refunds.get("re_abc123")
+
+# Equivalentes en la fachada raíz:
+# client.create_refund(charge_id: "ch_abc123", amount: 2500, idempotency_key: "...")
+# client.get_refund("re_abc123")
 ```
 
 ---
 
 ### 5.3 Bounded Context: Webhooks con Transactional Inbox (`webhooks`)
 
-Procesamiento seguro de eventos entrantes garantizando deduplicación exacta (*Exactly-Once delivery semantics*) y protección anti-timing attacks:
+El caso de uso `Webhooks::Application::UseCases::Process` implementa el patrón *Transactional Inbox*:
+1. Verifica si `delivery_id` ya existe en el `inbox_store` (retorna `{ status: :duplicate, entry: ... }` si el payload coincide, o lanza `ArgumentError` si hay conflicto de payload con el mismo `delivery_id`).
+2. Persiste la entrada con estado `:received`.
+3. Verifica la firma HMAC-SHA256 (`t=<timestamp>,v1=<hex>`) y la tolerancia temporal; si falla, actualiza el estado a `:rejected_signature` y lanza `Payment::SDK::SignatureVerificationError`.
+4. Invoca `projection.apply!(inbox_entry:)` y marca la entrada como `:processed` (o `:failed` si la proyección lanza una excepción).
 
 ```ruby
-# En tu controlador web (ej. Rails, Sinatra, Roda):
-payload_raw = request.raw_post
-signature   = request.headers["HTTP_X_SIGNATURE_256"]
-delivery_id = request.headers["HTTP_X_DELIVERY_ID"]
+class OrderWebhookProjection
+  def apply!(inbox_entry:)
+    event = Payment::SDK::Infrastructure::Adapters::Webhooks::EventParser.parse(
+      inbox_entry[:raw_payload]
+    )
 
-# El caso de uso Process orquesta verificación HMAC, deduplicación en Inbox y ejecución
-result = client.webhooks.process_event(
-  raw_payload: payload_raw,
-  signature: signature,
-  delivery_id: delivery_id
-) do |event|
-  # Este bloque SOLO se ejecuta si la firma es válida y el evento NO fue procesado antes
-  case event.event_type
-  when "payment_intent.succeeded"
-    OrderFulfillmentJob.perform_later(event.payment_intent_id)
-  when "charge.refunded"
-    AccountingLedger.record_refund(event.charge_id, event.refund_id)
+    case event.event_type
+    when "payment_intent.succeeded"
+      # event.payment_intent_id extrae automáticamente el ID con prefijo "pi_"
+      puts "Pago acreditado: #{event.payment_intent_id}"
+    when "charge.refunded"
+      puts "Cargo reembolsado: #{event.charge_id} (refund: #{event.refund_id})"
+    end
   end
 end
 
+result = client.webhooks.process(
+  payload: raw_request_body,
+  signature_header: request_headers["X-Signature"],
+  projection: OrderWebhookProjection.new
+)
+
 case result[:status]
 when :processed
-  render status: 200, json: { status: "processed" }
+  # Evento nuevo procesado correctamente
 when :duplicate
-  render status: 200, json: { status: "already_processed" }
-when :rejected_signature
-  render status: 401, json: { error: "Invalid signature" }
-else
-  render status: 500, json: { error: result[:error] }
+  # Entrega duplicada ignorada de forma idempotente
 end
 ```
 
@@ -261,54 +271,63 @@ end
 
 ### 5.4 Bounded Context: Conciliación Financiera (`reconciliation`)
 
-Auditoría y detección automática de discrepancias entre saldos locales y la plataforma remota:
+Compara proyecciones locales contra el snapshot remoto (`/reports/transactions?view=snapshot`), almacena cada resultado en `snapshot_store` y reporta las discrepancias en `mismatch_reporter`.
+
+Estados de drift detectados: `:match`, `:status_drift`, `:amount_drift`, `:attempt_drift`, `:capture_drift`, `:refund_drift`, `:missing_local` y `:missing_remote`.
 
 ```ruby
-# Comparar el estado local frente a la plataforma remota
-report = client.reconciliation.reconcile(
-  date: "2026-10-27",
+mismatch_reporter = Payment::SDK::Infrastructure::Adapters::Reporting::Mismatch::Reporter::InMemory.new
+
+snapshots = client.reconciliation.reconcile(
+  run_id: "recon_2026_10_28",
   local_records: [
-    { id: "pi_001", amount: 1000, status: "succeeded" },
-    { id: "pi_002", amount: 5000, status: "requires_capture" }
-  ]
+    { payment_intent_id: "pi_001", amount: 1000, currency: "usd", status: "succeeded" },
+    { payment_intent_id: "pi_002", amount: 5000, currency: "usd", status: "requires_capture" }
+  ],
+  mismatch_reporter: mismatch_reporter
 )
 
-if report.clean?
-  puts "Conciliación contable exitosa: 0 discrepancias."
+if mismatch_reporter.reports.empty?
+  puts "Conciliación limpia: #{snapshots.size} registros verificados sin drift."
 else
-  puts "Alerta: #{report.mismatch_count} discrepancias detectadas:"
-  report.mismatches.each do |mismatch|
-    puts "- [#{mismatch[:type]}] ID: #{mismatch[:id]} - Detalle: #{mismatch[:message]}"
+  mismatch_reporter.reports.each do |entry|
+    puts "Drift [#{entry[:status]}] en #{entry[:payment_intent_id]}"
   end
 end
 ```
 
 ---
 
-## 6. Manejo de Errores y Tipado de Excepciones
+## 6. Manejo de Errores y Jerarquía de Excepciones
 
-Toda falla de transporte o de validación de negocio se asigna a una excepción fuertemente tipada:
+Todas las excepciones del SDK heredan de `Payment::SDK::Error < StandardError`:
+
+| Excepción | Superclase | Cuándo se lanza |
+| :--- | :--- | :--- |
+| `Payment::SDK::ConfigurationError` | `Error` | Configuración inválida del SDK. |
+| `Payment::SDK::NetworkError` | `Error` | Falla de transporte o socket (tras agotar `max_retries`). |
+| `Payment::SDK::TimeoutError` | `Error` | `Net::OpenTimeout` o `Net::ReadTimeout` (tras agotar `max_retries`). |
+| `Payment::SDK::SignatureVerificationError` | `Error` | Firma de webhook ausente, malformada, fuera de tolerancia o inválida. |
+| `Payment::SDK::ApiError` | `Error` | Base para errores HTTP devueltos por la API (`status_code`, `code`, `details`, `request_id`, `raw_body`). |
+| `Payment::SDK::InvalidRequestError` | `ApiError` | HTTP 4xx o códigos `invalid_amount`, `invalid_currency`, `missing_idempotency_key`, `invalid_intent_state`, o JSON de webhook inválido. |
+| `Payment::SDK::PaymentNotFoundError` | `ApiError` | HTTP 404 o códigos `payment_intent_not_found`, `charge_not_found`, `refund_not_found`. |
+| `Payment::SDK::PaymentDeclinedError` | `ApiError` | Códigos `payment_declined` o `invalid_scenario`. |
+| `Payment::SDK::DuplicateRequestError` | `ApiError` | HTTP 409 o código `idempotency_conflict`. |
+| `Payment::SDK::UpstreamError` | `ApiError` | HTTP 5xx o códigos `internal_error`, `panic` (reintentado automáticamente hasta `max_retries`). |
 
 ```ruby
 begin
-  client.payments.capture_intent(
-    intent_id: "pi_invalid",
-    amount_to_capture: 1000,
-    idempotency_key: "key_123"
-  )
-rescue Payment::SDK::AuthenticationError => e
-  # Error 401: API Key incorrecta o expirada
-  logger.error("Error de autenticación: #{e.message}")
+  client.capture_payment_intent("pi_123", amount: 1000, idempotency_key: "cap-pi-123")
+rescue Payment::SDK::PaymentDeclinedError => e
+  warn "Pago rechazado (#{e.code}): #{e.message}"
+rescue Payment::SDK::DuplicateRequestError => e
+  warn "Conflicto de idempotencia (#{e.status_code}): #{e.request_id}"
+rescue Payment::SDK::PaymentNotFoundError => e
+  warn "Recurso inexistente (#{e.code})"
 rescue Payment::SDK::InvalidRequestError => e
-  # Error 400 / 422: Parámetros inválidos o violación de invariantes
-  logger.warn("Petición rechazada (#{e.status_code}): #{e.response_body}")
-rescue Payment::SDK::RateLimitError => e
-  # Error 429: Cuota de peticiones superada
-  sleep(e.retry_after || 5)
-  retry
-rescue Payment::SDK::APIError => e
-  # Error 500..503: Falla en el servidor remoto
-  logger.fatal("Falla de plataforma: #{e.message}")
+  warn "Solicitud inválida (#{e.status_code}): #{e.details}"
+rescue Payment::SDK::UpstreamError, Payment::SDK::TimeoutError, Payment::SDK::NetworkError => e
+  warn "Falla transitoria tras reintentos: #{e.message}"
 end
 ```
 
@@ -316,40 +335,33 @@ end
 
 ## 7. Concurrencia y Thread-Safety
 
-- **Fachadas y Clientes:** `Payment::SDK::Client` y todos los sub-clientes de contexto son **inmutables y stateless** tras su inicialización. Pueden compartirse de manera segura entre todos los hilos de servidores de alto rendimiento (Puma con múltiples hilos, Falcon) y trabajadores en segundo plano (Sidekiq).
-- **Adaptadores en Memoria:** Todos los almacenes en memoria incluidos en el SDK implementan cerrojos atómicos con `Mutex#synchronize` para garantizar seguridad en entornos de test concurrentes.
+- **Clientes y Comandos:** `Payment::SDK::Client` duplica y valida la configuración al inicializarse (`@config = config.dup`). Cada petición HTTP construye su propia instancia de `Net::HTTP` por llamada, evitando compartir sockets mutables entre hilos.
+- **Adaptadores en Memoria:** `Inbox::Store::InMemory`, `Snapshot::Store::InMemory` y `Mismatch::Reporter::InMemory` sincronizan todas las lecturas y escrituras mediante `Mutex#synchronize` y retornan copias (`dup`) para evitar mutaciones externas.
 
 ---
 
-## 8. Auditoría Técnica y Buenas Prácticas
-
-Para un análisis detallado sobre deuda técnica, evaluaciones de rendimiento con Ruby 3.2+ / YJIT, análisis de tiempos de ejecución y plan de evolución, consulta el informe formal:
+## 8. Auditoría Técnica y Estructura del Proyecto
 
 - 📄 **[Auditoría Técnica y Evaluación de Arquitectura (docs/audit/001-codebase_technical_audit.md)](docs/audit/001-codebase_technical_audit.md)**
+- 🏛️ **[Especificación de Arquitectura (docs/ARCHITECTURE.md)](docs/ARCHITECTURE.md)**
 - 🌲 **[Estructura Canónica Anotada (TREE.txt)](TREE.txt)**
 - 📐 **[Plantilla Arquetípica de Bounded Context (TREE_TEMPLATE.txt)](TREE_TEMPLATE.txt)**
+- 📋 **[Changelog (CHANGELOG.md)](CHANGELOG.md)**
 
 ---
 
-## 9. Guía de Desarrollo y Pruebas
-
-### Ejecución de Pruebas Automatizadas
-
-El SDK cuenta con una suite completa de pruebas Minitest con 100% de pasaje:
+## 9. Guía de Desarrollo, Pruebas y Documentación YARD
 
 ```bash
-# Ejecutar todas las pruebas unitarias y de integración
+# Ejecutar la suite completa de pruebas Minitest
 bundle exec rake test
+
+# Generar la documentación API con YARD en ./doc
+bundle exec rake yard
 ```
 
 ### Convenciones para Contribuciones
-1. **Context-First:** Todo nuevo componente debe ubicarse estrictamente dentro de su Bounded Context (`lib/payment/sdk/<context>/`).
-2. **Protocolo `#call`:** Comandos, consultas y casos de uso deben responder exclusivamente a `#call`.
-3. **Symbols en Dominio:** Entidades y agregados deben exponer y evaluar estados como `Symbols`.
-4. **Pruebas Espejo:** Todo archivo nuevo en `lib/` debe tener su correspondiente test en `test/` con el mismo path espejo.
-
----
-
-## Licencia
-
-Distribuido bajo la licencia MIT. Consulta el archivo `LICENSE` para más información.
+1. **Context-First:** Todo nuevo componente debe ubicarse dentro de su Bounded Context (`lib/payment/sdk/<context>/`).
+2. **Protocolo `#call`:** Comandos, consultas y casos de uso implementan `#call`.
+3. **Symbols en Dominio:** Las entidades normalizan su `@status` a `Symbol`.
+4. **Pruebas Espejo 1:1:** Todo archivo en `lib/` cuenta con su prueba unitaria correspondiente en `test/`.

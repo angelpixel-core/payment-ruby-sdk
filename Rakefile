@@ -12,7 +12,9 @@ end
 begin
   require "yard"
 
-  YARD::Rake::YardocTask.new(:yard)
+  YARD::Rake::YardocTask.new(:yard) do |t|
+    t.options = ["--fail-on-warning"]
+  end
 rescue LoadError
   desc "Generate YARD documentation (requires the yard gem)"
   task :yard do

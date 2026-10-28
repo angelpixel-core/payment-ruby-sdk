@@ -9,8 +9,15 @@ module Payment
   module SDK
     module Infrastructure
       module Adapters
+        # Webhook parsing adapters.
         module Webhooks
+          # Parses raw JSON strings or hashes into {Payment::SDK::Webhooks::Domain::Entities::WebhookEvent} instances.
           class EventParser
+            # Parses and validates a webhook payload.
+            #
+            # @param payload [String, Hash] raw JSON string or hash payload
+            # @return [Payment::SDK::Webhooks::Domain::Entities::WebhookEvent]
+            # @raise [Payment::SDK::InvalidRequestError] when `delivery_id`, `event_id`, or `event_type` is missing, or JSON is malformed
             def self.parse(payload)
               parsed = payload.is_a?(String) ? JSON.parse(payload, symbolize_names: true) : payload.transform_keys(&:to_sym)
 

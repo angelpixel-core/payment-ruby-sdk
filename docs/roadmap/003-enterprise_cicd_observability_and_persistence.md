@@ -75,7 +75,7 @@ graph TD
   - [x] Agregar `gem "yard"` en el grupo de desarrollo en `Gemfile`.
   - [x] Crear archivo `.yardopts` configurando títulos, formato markdown y exclusión de tests.
   - [x] Agregar tarea `rake yard` en `Rakefile`.
-  - [~] Documentar con tags YARD (`@param`, `@return`, `@raise`) las clases públicas fundamentales: hecho para `Client` y los 4 sub-clientes; pendiente entidades, value objects, errores y adaptadores (cobertura YARD actual: 42.76%).
+  - [x] Documentar con tags YARD (`@param`, `@return`, `@raise`) las clases públicas fundamentales (`Client`, entidades y sub-clientes) alcanzando **100.00% de cobertura YARD** con `--fail-on-warning`.
 - [x] **1.2 Pipeline de GitHub Pages**:
   - [x] Crear workflow `.github/workflows/documentation.yml` para compilar y desplegar YARD docs en GitHub Pages en push a `main`.
 - [x] **1.3 Automatización de Release con `release-please`**:

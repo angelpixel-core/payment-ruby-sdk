@@ -8,7 +8,15 @@ module Payment
     module Infrastructure
       module Adapters
         module Http
+          # Maps non-2xx HTTP responses into typed {Payment::SDK::ApiError} subclasses.
           class ErrorMapper
+            # Inspects an HTTP response and raises a typed {Payment::SDK::ApiError}
+            # when the status code is outside `200..299`.
+            #
+            # @param response [#code, #body] HTTP response object
+            # @param request_id [String, nil] optional correlation request identifier
+            # @return [nil] when the response status code is `200..299`
+            # @raise [Payment::SDK::ApiError] when the response status code is outside `200..299`
             def self.map_error(response, request_id: nil)
               status_code = response.code.to_i
               raw_body = response.body

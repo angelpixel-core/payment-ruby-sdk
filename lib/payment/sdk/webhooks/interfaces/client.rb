@@ -9,28 +9,34 @@ require "json"
 module Payment
   module SDK
     module Webhooks
+      # Driving interface layer of the webhooks bounded context.
       module Interfaces
         # Entry point of the webhooks bounded context (inbox-first processing).
         class Client
-          attr_reader :secret, :inbox_store, :verifier
+          # @return [String, nil] webhook signing secret
+          attr_reader :secret
+          # @return [Domain::Ports::Inbox::Store] default inbox store implementation
+          attr_reader :inbox_store
+          # @return [Domain::Ports::Signature::Verifier] signature verifier implementation
+          attr_reader :verifier
 
-          # @param secret [String] webhook signing secret
-          # @param inbox_store [Object, nil] inbox store port implementation (in-memory by default)
-          # @param verifier [Object, nil] signature verifier port implementation (HMAC-SHA256 by default)
+          # @param secret [String, nil] webhook signing secret
+          # @param inbox_store [Domain::Ports::Inbox::Store, nil] inbox store port implementation (in-memory by default)
+          # @param verifier [Domain::Ports::Signature::Verifier, nil] signature verifier port implementation (HMAC-SHA256 by default)
           def initialize(secret:, inbox_store: nil, verifier: nil)
             @secret = secret
             @inbox_store = inbox_store || default_inbox_store
             @verifier = verifier || default_verifier
           end
 
-          # Verifies the signature, deduplicates through the inbox and applies the projection.
+          # Verifies the signature, deduplicates through the inbox, and applies the projection.
           #
-          # @param payload [String, Hash] raw body or parsed payload
+          # @param payload [String, Hash] raw JSON body or parsed hash payload
           # @param signature_header [String] value of the signature header
-          # @param projection [#call] callable applied to the verified event
+          # @param projection [#apply!] projection object responding to `#apply!(inbox_entry:)`
           # @param delivery_id [String, nil] extracted from the payload when omitted
-          # @param inbox_store [Object, nil] overrides the client's inbox store
-          # @return [Hash] processing result
+          # @param inbox_store [Domain::Ports::Inbox::Store, nil] overrides the client's inbox store
+          # @return [Hash] processing result (`{ status: :processed | :duplicate, entry: Hash }`)
           # @raise [Payment::SDK::SignatureVerificationError] when the signature is invalid
           def process(payload:, signature_header:, projection:, delivery_id: nil, inbox_store: nil)
             store = inbox_store || @inbox_store
@@ -52,8 +58,11 @@ module Payment
             )
           end
 
+          # Parses a raw webhook payload into a {Domain::Entities::WebhookEvent}.
+          #
           # @param payload [String, Hash] raw body or parsed payload
           # @return [Domain::Entities::WebhookEvent]
+          # @raise [Payment::SDK::InvalidRequestError] when required fields are missing or JSON is invalid
           def parse_event(payload)
             Infrastructure::Adapters::Webhooks::EventParser.parse(payload)
           end

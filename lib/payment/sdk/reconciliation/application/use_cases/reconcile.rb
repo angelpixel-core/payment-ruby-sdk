@@ -4,14 +4,25 @@ module Payment
   module SDK
     module Reconciliation
       module Application
+        # Use cases of the reconciliation bounded context.
         module UseCases
+          # Compares local transaction records against the remote platform snapshot,
+          # persists per-intent reconciliation snapshots, and reports any drift.
           class Reconcile
+            # @param snapshot_client [#get_transaction_snapshot, #get_snapshot] client used to fetch remote records
+            # @param snapshot_store [Domain::Ports::Snapshot::Store] store where reconciliation snapshots are persisted
+            # @param mismatch_reporter [Domain::Ports::Mismatch::Reporter] reporter notified when drift is detected
             def initialize(snapshot_client:, snapshot_store:, mismatch_reporter:)
               @snapshot_client = snapshot_client
               @snapshot_store = snapshot_store
               @mismatch_reporter = mismatch_reporter
             end
 
+            # Runs reconciliation for the given local records and run identifier.
+            #
+            # @param local_records [Array<Hash>] local records to reconcile
+            # @param run_id [String] unique reconciliation run identifier
+            # @return [Array<Hash>] reconciliation snapshot entries for all compared records
             def call(local_records:, run_id:)
               local_records = local_records.map(&:dup)
               remote_records = fetch_remote_records
