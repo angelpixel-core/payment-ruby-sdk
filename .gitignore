@@ -14,3 +14,7 @@ tmp/
 # OS files
 .DS_Store
 Thumbs.db
+
+# YARD
+/doc/
+/.yardoc/

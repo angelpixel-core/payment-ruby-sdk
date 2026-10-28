@@ -9,4 +9,15 @@ Rake::TestTask.new(:test) do |t|
   t.warning = true
 end
 
+begin
+  require "yard"
+
+  YARD::Rake::YardocTask.new(:yard)
+rescue LoadError
+  desc "Generate YARD documentation (requires the yard gem)"
+  task :yard do
+    abort "yard is not installed. Run `bundle install` first."
+  end
+end
+
 task default: :test

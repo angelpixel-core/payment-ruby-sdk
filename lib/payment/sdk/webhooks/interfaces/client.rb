@@ -10,15 +10,28 @@ module Payment
   module SDK
     module Webhooks
       module Interfaces
+        # Entry point of the webhooks bounded context (inbox-first processing).
         class Client
           attr_reader :secret, :inbox_store, :verifier
 
+          # @param secret [String] webhook signing secret
+          # @param inbox_store [Object, nil] inbox store port implementation (in-memory by default)
+          # @param verifier [Object, nil] signature verifier port implementation (HMAC-SHA256 by default)
           def initialize(secret:, inbox_store: nil, verifier: nil)
             @secret = secret
             @inbox_store = inbox_store || default_inbox_store
             @verifier = verifier || default_verifier
           end
 
+          # Verifies the signature, deduplicates through the inbox and applies the projection.
+          #
+          # @param payload [String, Hash] raw body or parsed payload
+          # @param signature_header [String] value of the signature header
+          # @param projection [#call] callable applied to the verified event
+          # @param delivery_id [String, nil] extracted from the payload when omitted
+          # @param inbox_store [Object, nil] overrides the client's inbox store
+          # @return [Hash] processing result
+          # @raise [Payment::SDK::SignatureVerificationError] when the signature is invalid
           def process(payload:, signature_header:, projection:, delivery_id: nil, inbox_store: nil)
             store = inbox_store || @inbox_store
             actual_delivery_id = delivery_id || extract_delivery_id(payload)
@@ -39,6 +52,8 @@ module Payment
             )
           end
 
+          # @param payload [String, Hash] raw body or parsed payload
+          # @return [Domain::Entities::WebhookEvent]
           def parse_event(payload)
             Infrastructure::Adapters::Webhooks::EventParser.parse(payload)
           end

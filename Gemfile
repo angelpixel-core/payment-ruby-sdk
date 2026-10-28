@@ -6,3 +6,8 @@ gemspec
 
 gem "minitest", ">= 5.20", "< 7"
 gem "rake", "~> 13.0"
+
+group :development do
+  gem "yard", "~> 0.9"
+  gem "webrick", "~> 1.8" # required by `yard server` on Ruby >= 3.0
+end

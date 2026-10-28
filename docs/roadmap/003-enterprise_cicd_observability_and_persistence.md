@@ -71,17 +71,17 @@ graph TD
 ## 3. Fases de Ejecución Detalladas (Checklist de Tareas)
 
 ### Fase 1: Documentación API con YARD y Release Automation
-- [ ] **1.1 Configuración de YARD**:
-  - [ ] Agregar `gem "yard"` en el grupo de desarrollo en `Gemfile`.
-  - [ ] Crear archivo `.yardopts` configurando títulos, formato markdown y exclusión de tests.
-  - [ ] Agregar tarea `rake yard` en `Rakefile`.
-  - [ ] Documentar con tags YARD (`@param`, `@return`, `@raise`) las clases públicas fundamentales (`Client`, entidades y sub-clientes).
-- [ ] **1.2 Pipeline de GitHub Pages**:
-  - [ ] Crear workflow `.github/workflows/documentation.yml` para compilar y desplegar YARD docs en GitHub Pages en push a `main`.
-- [ ] **1.3 Automatización de Release con `release-please`**:
-  - [ ] Crear configuración `.release-please-config.json` y `.release-please-manifest.json`.
-  - [ ] Crear workflow `.github/workflows/release.yml` integrando `google-github-actions/release-please-action`.
-  - [ ] Inicializar `CHANGELOG.md` con el estándar *Keep a Changelog* documentando las versiones 0.1.0 y cambios actuales.
+- [x] **1.1 Configuración de YARD**:
+  - [x] Agregar `gem "yard"` en el grupo de desarrollo en `Gemfile`.
+  - [x] Crear archivo `.yardopts` configurando títulos, formato markdown y exclusión de tests.
+  - [x] Agregar tarea `rake yard` en `Rakefile`.
+  - [~] Documentar con tags YARD (`@param`, `@return`, `@raise`) las clases públicas fundamentales: hecho para `Client` y los 4 sub-clientes; pendiente entidades, value objects, errores y adaptadores (cobertura YARD actual: 42.76%).
+- [x] **1.2 Pipeline de GitHub Pages**:
+  - [x] Crear workflow `.github/workflows/documentation.yml` para compilar y desplegar YARD docs en GitHub Pages en push a `main`.
+- [x] **1.3 Automatización de Release con `release-please`**:
+  - [x] Crear configuración `.release-please-config.json` y `.release-please-manifest.json`.
+  - [x] Crear workflow `.github/workflows/release.yml` integrando `googleapis/release-please-action`.
+  - [x] Inicializar `CHANGELOG.md` con el estándar *Keep a Changelog* documentando las versiones 0.1.0 y cambios actuales.
 
 ---
 

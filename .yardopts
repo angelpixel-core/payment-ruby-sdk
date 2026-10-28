@@ -1,0 +1,12 @@
+--markup markdown
+--title "Payment::SDK API Documentation"
+--output-dir doc
+--readme README.md
+--protected
+--no-private
+--hide-api private
+lib/**/*.rb
+-
+CHANGELOG.md
+docs/ARCHITECTURE.md
+docs/audit/001-codebase_technical_audit.md
