@@ -14,15 +14,19 @@ module Payment
               # @param payment_method_token [String] payment method token
               # @param idempotency_key [String, Shared::Domain::ValueObjects::IdempotencyKey] mandatory idempotency key
               # @param scenario [String, nil] optional sandbox scenario header (`X-Sandbox-Scenario`)
+              # @param request_id [String, nil] optional request identifier for distributed tracing
+              # @param traceparent [String, nil] optional W3C traceparent header
+              # @param headers [Hash] optional additional HTTP headers
               # @return [Hash] parsed API response
               # @raise [ArgumentError] when `idempotency_key` is missing or empty
-              def call(id:, payment_method_token:, idempotency_key: nil, scenario: nil)
-                key = normalize_idempotency_key(idempotency_key)
-
-                headers = {
-                  "Idempotency-Key" => key.value
-                }
-                headers["X-Sandbox-Scenario"] = scenario if scenario
+              def call(id:, payment_method_token:, idempotency_key: nil, scenario: nil, request_id: nil, traceparent: nil, headers: {})
+                req_headers = build_headers(
+                  idempotency_key: idempotency_key,
+                  request_id: request_id,
+                  traceparent: traceparent,
+                  headers: headers
+                )
+                req_headers["X-Sandbox-Scenario"] = scenario if scenario
 
                 body = {
                   payment_method_token: payment_method_token
@@ -31,7 +35,7 @@ module Payment
                 http_client.request(
                   method: :post,
                   path: "/payment_intents/#{id}/confirm",
-                  headers: headers,
+                  headers: req_headers,
                   body: body
                 )
               end

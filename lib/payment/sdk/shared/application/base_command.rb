@@ -47,6 +47,22 @@ module Payment
               Domain::ValueObjects::IdempotencyKey.new(key)
             end
           end
+
+          # Builds standard HTTP headers including idempotency key and distributed tracing.
+          #
+          # @param idempotency_key [String, Domain::ValueObjects::IdempotencyKey] mandatory idempotency key
+          # @param request_id [String, nil] optional correlation identifier
+          # @param traceparent [String, nil] optional W3C trace context header
+          # @param headers [Hash] additional custom headers
+          # @return [Hash{String => String}] merged headers
+          # @raise [ArgumentError] when `idempotency_key` is missing or empty
+          def build_headers(idempotency_key:, request_id: nil, traceparent: nil, headers: {})
+            merged = headers.each_with_object({}) { |(k, v), acc| acc[k.to_s] = v.to_s }
+            merged["Idempotency-Key"] = normalize_idempotency_key(idempotency_key).value
+            merged["X-Request-Id"] = request_id.to_s if request_id
+            merged["traceparent"] = traceparent.to_s if traceparent
+            merged
+          end
         end
       end
     end

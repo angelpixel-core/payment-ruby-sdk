@@ -31,9 +31,10 @@ module Payment
           end
 
           # @param id [String] refund identifier
+          # @param options [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
           # @return [Hash] parsed refund payload
-          def get(id)
-            Application::Queries::Get.new(@http_client).call(id: id)
+          def get(id, **options)
+            Application::Queries::Get.new(@http_client).call(id: id, **options)
           end
         end
       end

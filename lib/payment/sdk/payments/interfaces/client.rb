@@ -84,15 +84,17 @@ module Payment
             end
 
             # @param id [String] payment intent identifier
+            # @param options [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
             # @return [Hash] parsed payment intent payload
-            def get(id)
-              Application::Queries::Intents::Get.new(@http_client).call(id: id)
+            def get(id, **options)
+              Application::Queries::Intents::Get.new(@http_client).call(id: id, **options)
             end
 
             # @param id [String] payment intent identifier
+            # @param options [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
             # @return [Hash] parsed lifecycle view of the intent
-            def get_lifecycle(id)
-              Application::Queries::Lifecycles::Get.new(@http_client).call(id: id)
+            def get_lifecycle(id, **options)
+              Application::Queries::Lifecycles::Get.new(@http_client).call(id: id, **options)
             end
           end
 
@@ -104,9 +106,10 @@ module Payment
             end
 
             # @param id [String] charge identifier
+            # @param options [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
             # @return [Hash] parsed charge payload
-            def get(id)
-              Application::Queries::Charges::Get.new(@http_client).call(id: id)
+            def get(id, **options)
+              Application::Queries::Charges::Get.new(@http_client).call(id: id, **options)
             end
           end
 
@@ -118,9 +121,10 @@ module Payment
             end
 
             # @param id [String] payment attempt identifier
+            # @param options [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
             # @return [Hash] parsed payment attempt payload
-            def get(id)
-              Application::Queries::Attempts::Get.new(@http_client).call(id: id)
+            def get(id, **options)
+              Application::Queries::Attempts::Get.new(@http_client).call(id: id, **options)
             end
           end
         end

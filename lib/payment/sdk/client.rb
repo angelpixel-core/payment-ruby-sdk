@@ -105,41 +105,46 @@ module Payment
       # Retrieves a refund by its identifier.
       #
       # @param id [String] refund identifier (`re_...`)
+      # @param opts [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
       # @return [Hash] parsed refund payload
-      def get_refund(id)
-        refunds.get(id)
+      def get_refund(id, **opts)
+        refunds.get(id, **opts)
       end
 
       # Retrieves a payment intent by its identifier.
       #
       # @param id [String] payment intent identifier (`pi_...`)
+      # @param opts [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
       # @return [Hash] parsed payment intent payload
-      def get_payment_intent(id)
-        payments.intents.get(id)
+      def get_payment_intent(id, **opts)
+        payments.intents.get(id, **opts)
       end
 
       # Retrieves the aggregated lifecycle view of a payment intent.
       #
       # @param id [String] payment intent identifier (`pi_...`)
+      # @param opts [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
       # @return [Hash] parsed lifecycle payload
-      def get_payment_lifecycle(id)
-        payments.intents.get_lifecycle(id)
+      def get_payment_lifecycle(id, **opts)
+        payments.intents.get_lifecycle(id, **opts)
       end
 
       # Retrieves a canonical transaction report.
       #
       # @param query_params [Hash] optional `:start_date` and `:end_date` filters
+      # @param opts [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
       # @return [Array<Hash>, Hash] parsed report payload
-      def get_transaction_report(query_params = {})
-        reconciliation.get_report(**query_params)
+      def get_transaction_report(query_params = {}, **opts)
+        reconciliation.get_report(**query_params, **opts)
       end
 
       # Retrieves a deterministic transaction snapshot for reconciliation.
       #
       # @param query_params [Hash] optional `:start_date` and `:end_date` filters
+      # @param opts [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
       # @return [Array<Hash>, Hash] parsed snapshot payload
-      def get_transaction_snapshot(query_params = {})
-        reconciliation.get_snapshot(**query_params)
+      def get_transaction_snapshot(query_params = {}, **opts)
+        reconciliation.get_snapshot(**query_params, **opts)
       end
 
       # Verifies, deduplicates (inbox), and projects an incoming webhook.
@@ -182,7 +187,8 @@ module Payment
             base_url: @config.base_url || "https://api.payment.com",
             open_timeout: @config.open_timeout,
             read_timeout: @config.timeout,
-            max_retries: @config.max_retries
+            max_retries: @config.max_retries,
+            logger: @config.logger
           )
           AuthenticatedHttpClient.new(adapter, @config.api_key)
         end
@@ -226,10 +232,20 @@ module Payment
         # @param headers [Hash] custom HTTP headers
         # @param body [Hash, nil] request body payload
         # @param query_params [Hash] URL query string parameters
+        # @param request_id [String, nil] optional correlation identifier for `X-Request-Id`
+        # @param traceparent [String, nil] optional W3C trace context header
         # @return [Object] parsed response body
-        def request(method:, path:, headers: {}, body: nil, query_params: {})
+        def request(method:, path:, headers: {}, body: nil, query_params: {}, request_id: nil, traceparent: nil)
           headers["Authorization"] = "Bearer #{@api_key}" if @api_key
-          @adapter.request(method: method, path: path, headers: headers, body: body, query_params: query_params)
+          @adapter.request(
+            method: method,
+            path: path,
+            headers: headers,
+            body: body,
+            query_params: query_params,
+            request_id: request_id,
+            traceparent: traceparent
+          )
         end
       end
     end

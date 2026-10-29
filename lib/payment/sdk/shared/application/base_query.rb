@@ -24,6 +24,21 @@ module Payment
           def call(**options)
             raise NotImplementedError, "#{self.class} must implement #call"
           end
+
+          protected
+
+          # Builds standard HTTP headers including distributed tracing identifiers.
+          #
+          # @param request_id [String, nil] optional correlation identifier
+          # @param traceparent [String, nil] optional W3C trace context header
+          # @param headers [Hash] additional custom headers
+          # @return [Hash{String => String}] merged headers
+          def build_headers(request_id: nil, traceparent: nil, headers: {})
+            merged = headers.each_with_object({}) { |(k, v), acc| acc[k.to_s] = v.to_s }
+            merged["X-Request-Id"] = request_id.to_s if request_id
+            merged["traceparent"] = traceparent.to_s if traceparent
+            merged
+          end
         end
       end
     end

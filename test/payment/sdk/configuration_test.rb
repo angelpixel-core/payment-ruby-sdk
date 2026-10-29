@@ -26,6 +26,7 @@ class ConfigurationTest < Minitest::Test
     assert_equal 5, config.open_timeout
     assert_equal 2, config.max_retries
     assert_nil config.logger
+    assert_equal :info, config.log_level
   end
 
   def test_configure_via_block
@@ -72,6 +73,19 @@ class ConfigurationTest < Minitest::Test
     assert_raises(ArgumentError) do
       Payment::SDK.configure do |c|
         c.max_retries = -5
+      end
+    end
+  end
+
+  def test_valid_and_invalid_log_levels
+    Payment::SDK.configure do |c|
+      c.log_level = :debug
+    end
+    assert_equal :debug, Payment::SDK.configuration.log_level
+
+    assert_raises(ArgumentError) do
+      Payment::SDK.configure do |c|
+        c.log_level = :invalid_level
       end
     end
   end

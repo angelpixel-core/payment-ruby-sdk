@@ -17,9 +17,11 @@ module Payment
               # @param headers [Hash{String => String}] HTTP request headers
               # @param body [Hash, nil] request body payload to serialize as JSON
               # @param query_params [Hash] URL query string parameters
+              # @param request_id [String, nil] optional correlation identifier for `X-Request-Id`
+              # @param traceparent [String, nil] optional W3C trace context header
               # @return [Object] parsed response body
               # @raise [NotImplementedError] when not implemented by an adapter
-              def request(method:, path:, headers: {}, body: nil, query_params: {})
+              def request(method:, path:, headers: {}, body: nil, query_params: {}, request_id: nil, traceparent: nil)
                 raise NotImplementedError, "#{self.class} must implement #request"
               end
             end

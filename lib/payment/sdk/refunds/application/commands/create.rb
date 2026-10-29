@@ -15,14 +15,18 @@ module Payment
             # @param amount [Integer, nil] optional partial refund amount in minor units
             # @param reason [String, nil] optional refund reason
             # @param idempotency_key [String, Shared::Domain::ValueObjects::IdempotencyKey] mandatory idempotency key
+            # @param request_id [String, nil] optional request identifier for distributed tracing
+            # @param traceparent [String, nil] optional W3C traceparent header
+            # @param headers [Hash] optional additional HTTP headers
             # @return [Hash] parsed refund response payload
             # @raise [ArgumentError] when `idempotency_key` is missing or empty
-            def call(charge_id:, amount: nil, reason: nil, idempotency_key: nil)
-              key = normalize_idempotency_key(idempotency_key)
-
-              headers = {
-                "Idempotency-Key" => key.value
-              }
+            def call(charge_id:, amount: nil, reason: nil, idempotency_key: nil, request_id: nil, traceparent: nil, headers: {})
+              req_headers = build_headers(
+                idempotency_key: idempotency_key,
+                request_id: request_id,
+                traceparent: traceparent,
+                headers: headers
+              )
 
               body = {
                 charge_id: charge_id
@@ -33,7 +37,7 @@ module Payment
               http_client.request(
                 method: :post,
                 path: "/refunds",
-                headers: headers,
+                headers: req_headers,
                 body: body
               )
             end

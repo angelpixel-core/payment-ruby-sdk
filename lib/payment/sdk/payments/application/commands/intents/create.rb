@@ -21,10 +21,18 @@ module Payment
               # @param capture_method [String] `"automatic"` or `"manual"`
               # @param idempotency_key [String, Shared::Domain::ValueObjects::IdempotencyKey] mandatory idempotency key
               # @param metadata [Hash] optional key-value metadata
+              # @param request_id [String, nil] optional request identifier for distributed tracing
+              # @param traceparent [String, nil] optional W3C traceparent header
+              # @param headers [Hash] optional additional HTTP headers
               # @return [Hash] parsed API response
               # @raise [ArgumentError] when `idempotency_key`, `amount`, or `currency` is invalid
-              def call(amount:, currency:, merchant_id: nil, customer_id: nil, capture_method: "automatic", idempotency_key: nil, metadata: {})
-                key = normalize_idempotency_key(idempotency_key)
+              def call(amount:, currency:, merchant_id: nil, customer_id: nil, capture_method: "automatic", idempotency_key: nil, metadata: {}, request_id: nil, traceparent: nil, headers: {})
+                req_headers = build_headers(
+                  idempotency_key: idempotency_key,
+                  request_id: request_id,
+                  traceparent: traceparent,
+                  headers: headers
+                )
                 money = Shared::Domain::ValueObjects::Money.new(amount, currency)
 
                 body = {
@@ -36,14 +44,10 @@ module Payment
                 body[:merchant_id] = merchant_id if merchant_id
                 body[:customer_id] = customer_id if customer_id
 
-                headers = {
-                  "Idempotency-Key" => key.value
-                }
-
                 http_client.request(
                   method: :post,
                   path: "/payment_intents",
-                  headers: headers,
+                  headers: req_headers,
                   body: body
                 )
               end

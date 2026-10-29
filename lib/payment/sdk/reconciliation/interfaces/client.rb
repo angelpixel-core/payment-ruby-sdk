@@ -44,18 +44,20 @@ module Payment
 
           # @param start_date [String, nil] optional ISO date/time lower bound
           # @param end_date [String, nil] optional ISO date/time upper bound
+          # @param options [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
           # @return [Array<Hash>, Hash] transaction report payload
-          def get_report(start_date: nil, end_date: nil)
+          def get_report(start_date: nil, end_date: nil, **options)
             query = Application::Queries::Reports::Get.new(@http_client)
-            query.call(start_date: start_date, end_date: end_date)
+            query.call(start_date: start_date, end_date: end_date, **options)
           end
 
           # @param start_date [String, nil] optional ISO date/time lower bound
           # @param end_date [String, nil] optional ISO date/time upper bound
+          # @param options [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
           # @return [Array<Hash>, Hash] deterministic transaction snapshot payload
-          def get_snapshot(start_date: nil, end_date: nil)
+          def get_snapshot(start_date: nil, end_date: nil, **options)
             query = Application::Queries::Snapshots::Get.new(@http_client)
-            query.call(start_date: start_date, end_date: end_date)
+            query.call(start_date: start_date, end_date: end_date, **options)
           end
 
           alias_method :get_transaction_report, :get_report

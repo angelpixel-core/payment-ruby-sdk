@@ -101,16 +101,16 @@ graph TD
 ---
 
 ### Fase 3: Observabilidad y Telemetría Enterprise
-- [ ] **3.1 Logger Contextual Inyectable**:
-  - [ ] Extender `Configuration` con `attr_accessor :logger, :log_level`.
-  - [ ] Implementar decorador/helper de logging interno seguro que sanitice tokens y headers sensibles (Authorization, Signing Secret).
-  - [ ] Instrumentar el cliente HTTP (`NetHttp`) para registrar eventos estructurados en formato clave-valor o JSON (método, URL sanitizada, código de respuesta, duración en milisegundos).
-- [ ] **3.2 Propagación de Trazabilidad Distribuida (W3C Trace Context)**:
-  - [ ] Permitir inyección de `traceparent` o `request_id` en las opciones de comandos y llamadas HTTP.
-  - [ ] Propagar cabeceras `traceparent` y `X-Request-Id` hacia las peticiones de red salientes.
-- [ ] **3.3 Tests Espejo y Verificación**:
-  - [ ] Tests unitarios para el comportamiento del logger y la sanitización de secretos.
-  - [ ] Tests para la propagación de cabeceras de trazabilidad.
+- [x] **3.1 Logger Contextual Inyectable**:
+  - [x] Extender `Configuration` con `attr_accessor :logger, :log_level`.
+  - [x] Implementar decorador/helper de logging interno seguro que sanitice tokens y headers sensibles (Authorization, Signing Secret).
+  - [x] Instrumentar el cliente HTTP (`NetHttp`) para registrar eventos estructurados en formato clave-valor o JSON (método, URL sanitizada, código de respuesta, duración en milisegundos).
+- [x] **3.2 Propagación de Trazabilidad Distribuida (W3C Trace Context)**:
+  - [x] Permitir inyección de `traceparent` o `request_id` en las opciones de comandos y llamadas HTTP.
+  - [x] Propagar cabeceras `traceparent` y `X-Request-Id` hacia las peticiones de red salientes.
+- [x] **3.3 Tests Espejo y Verificación**:
+  - [x] Tests unitarios para el comportamiento del logger y la sanitización de secretos.
+  - [x] Tests para la propagación de cabeceras de trazabilidad.
 
 ---
 
