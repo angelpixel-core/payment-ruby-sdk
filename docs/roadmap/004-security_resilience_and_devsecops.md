@@ -114,16 +114,16 @@ flowchart TD
 ---
 
 ### Fase 4: Documentación Canónica, Actualización de TREE.txt y Release
-- [ ] **4.1 Actualización de `TREE.txt`**:
-  - [ ] Regenerar árbol canónico con nuevos archivos de resiliencia (`resilience/circuit_breaker.rb`), workflows y pruebas alineados estrictamente en columna 69.
-- [ ] **4.2 Actualización de `README.md`**:
-  - [ ] Documentar Circuit Breaker, Rate Limiting (429), Zero-PII y la suite de seguridad DevSecOps.
-- [ ] **4.3 Auditoría Técnica Final**:
-  - [ ] Completar `docs/audit/002-security_resilience_and_devsecops_audit.md`.
-- [ ] **4.4 Validación Integral y Commit Semántico**:
-  - [ ] `rake test` (100% verde).
-  - [ ] `rake test:integration` (100% verde).
-  - [ ] `standardrb` (0 ofensas).
-  - [ ] `rake yard` (100.00% documentado, 0 warnings).
-  - [ ] `bundle-audit` y `brakeman` (0 vulnerabilidades).
-  - [ ] `gem build payment-sdk.gemspec` (empaquetado limpio sin warnings).
+- [x] **4.1 Actualización de `TREE.txt`**:
+  - [x] Regenerar árbol canónico con nuevos archivos de resiliencia (`resilience/circuit_breaker.rb`), workflows y pruebas alineados estrictamente en columna 69.
+- [x] **4.2 Actualización de `README.md`**:
+  - [x] Documentar Circuit Breaker, Rate Limiting (429), Zero-PII y la suite de seguridad DevSecOps.
+- [x] **4.3 Auditoría Técnica Final**:
+  - [x] Completar `docs/audit/002-security_resilience_and_devsecops_audit.md`.
+- [x] **4.4 Validación Integral y Commit Semántico**:
+  - [x] `rake test` (100% verde).
+  - [x] `rake test:integration` (100% verde).
+  - [x] `standardrb` (0 ofensas).
+  - [x] `rake yard` (100.00% documentado, 0 warnings).
+  - [x] `bundle-audit` y `brakeman` (0 vulnerabilidades).
+  - [x] `gem build payment-sdk.gemspec` (empaquetado limpio sin warnings).

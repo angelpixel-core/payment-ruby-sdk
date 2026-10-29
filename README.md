@@ -2,9 +2,10 @@
 
 [![Ruby Version](https://img.shields.io/badge/ruby-%3E%3D%203.2-red.svg)](https://www.ruby-lang.org)
 [![Architecture](https://img.shields.io/badge/architecture-Clean%20%2F%20Context--First-blue.svg)](docs/ARCHITECTURE.md)
-[![Tests](https://img.shields.io/badge/tests-134%20unit%20%2B%207%20e2e%20passed-brightgreen.svg)](test/)
+[![Tests](https://img.shields.io/badge/tests-150%20unit%20%2B%207%20e2e%20passed-brightgreen.svg)](test/)
 [![YARD Docs](https://img.shields.io/badge/yard-100%25%20documented-brightgreen.svg)](https://angelpixel-core.github.io/payment-ruby-sdk/)
-[![Audit Score](https://img.shields.io/badge/audit%20health-10.0%2F10%20enterprise-blueviolet.svg)](docs/audit/001-codebase_technical_audit.md)
+[![Security](https://img.shields.io/badge/DevSecOps-CodeQL%20%7C%20Brakeman%20%7C%20Semgrep%20%7C%20Gitleaks-success.svg)](.github/workflows/security.yml)
+[![Audit Score](https://img.shields.io/badge/audit%20health-10.0%2F10%20enterprise-blueviolet.svg)](docs/audit/002-security_resilience_and_devsecops_audit.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 SDK idiomático en Ruby de **cero dependencias externas en runtime**, diseñado bajo los principios de **Clean Architecture**, **Hexagonal Architecture (Ports & Adapters)**, **Domain-Driven Design (DDD)**, **Bounded Contexts** y segregación **CQRS**.
@@ -17,8 +18,11 @@ SDK idiomático en Ruby de **cero dependencias externas en runtime**, diseñado 
 2. [Arquitectura del Sistema (Context-First)](#2-arquitectura-del-sistema-context-first)
 3. [Instalación](#3-instalación)
 4. [Configuración Segura, Resiliencia y Observabilidad](#4-configuración-segura-resiliencia-y-observabilidad)
-   - [4.1 Resiliencia HTTP y Reintentos Exponenciales](#41-resiliencia-http-y-reintentos-exponenciales)
-   - [4.2 Observabilidad, Sanitización de Logs y W3C Tracing](#42-observabilidad-sanitización-de-logs-y-w3c-tracing)
+   - [4.1 Resiliencia HTTP, Reintentos Exponenciales y Circuit Breaker](#41-resiliencia-http-reintentos-exponenciales-y-circuit-breaker)
+   - [4.2 Rate Limiting Reactivo (HTTP 429) y Backoff](#42-rate-limiting-reactivo-http-429-y-backoff)
+   - [4.3 Observabilidad, Zero-PII Sanitization y W3C Tracing](#43-observabilidad-zero-pii-sanitization-y-w3c-tracing)
+   - [4.4 TTL y Evicción Anti-Saturación en Transactional Inbox](#44-ttl-y-evicción-anti-saturación-en-transactional-inbox)
+   - [4.5 Instanciación Aislada del Cliente](#45-instanciación-aislada-del-cliente)
 5. [Guía de Integración por Bounded Context](#5-guía-de-integración-por-bounded-context)
    - [5.1 Bounded Context: Pagos (`payments`)](#51-bounded-context-pagos-payments)
    - [5.2 Bounded Context: Reembolsos (`refunds`)](#52-bounded-context-reembolsos-refunds)
@@ -140,22 +144,46 @@ Payment::SDK.configure do |config|
   config.timeout        = 10 # Read timeout HTTP en segundos (por defecto: 10)
   config.open_timeout   = 5  # Connection timeout en segundos (por defecto: 5)
   config.max_retries    = 2  # Reintentos ante fallos de red/5xx con backoff exponencial y jitter (por defecto: 2)
+
+  # Resiliencia y Circuit Breaker
+  config.circuit_breaker_enabled           = true # Activa el Circuit Breaker nativo thread-safe (por defecto: true)
+  config.circuit_breaker_failure_threshold = 5    # Umbral de fallos consecutivos 5xx/timeout para abrir el circuito (por defecto: 5)
+  config.circuit_breaker_reset_timeout     = 30.0 # Período de enfriamiento en segundos antes del estado half_open (por defecto: 30)
+  config.rate_limit_max_delay              = 10.0 # Tiempo máximo de espera en segundos ante HTTP 429 Retry-After (por defecto: 10)
+
   config.logger         = Logger.new($stdout) # Logger estructurado (opcional)
 end
 ```
 
-### 4.1 Resiliencia HTTP y Reintentos Exponenciales
+### 4.1 Resiliencia HTTP, Reintentos Exponenciales y Circuit Breaker
 
-El cliente `Infrastructure::Adapters::Http::Client::NetHttp` maneja caídas transitorias de red, timeouts (`Net::OpenTimeout`, `Net::ReadTimeout`) y respuestas 5xx del servidor mediante reintentos con backoff exponencial y jitter aleatorio (`2^(attempt - 1) + rand(0.0..0.5)`).
+El cliente HTTP (`Infrastructure::Adapters::Http::Client::NetHttp`) implementa una política multinivel de alta disponibilidad:
+- **Backoff Exponencial y Jitter:** Ante errores transitorios de red (`Net::OpenTimeout`, `Net::ReadTimeout`, `SocketError`) o respuestas HTTP 5xx (`UpstreamError`), reintenta hasta `max_retries` con cálculo `2^(attempt - 1) + rand(0.0..0.5)`.
+- **Circuit Breaker Nativo Thread-Safe:**
+  - **Aislamiento Estricto:** Registra como fallo exclusivamente caídas de red, timeouts y HTTP 5xx (`UpstreamError`). Errores de cliente 4xx (p. ej. `PaymentDeclinedError`, `InvalidRequestError`) **no penalizan** el circuito.
+  - **Máquina de Estados Concurrente:** Transiciona entre `:closed`, `:open` y `:half_open` usando un reloj monotónico (`Process.clock_gettime(Process::CLOCK_MONOTONIC)`) sincronizado mediante `Mutex`.
+  - **Fallo Rápido (Fail-Fast):** Cuando el circuito está abierto, lanza de inmediato `Payment::SDK::CircuitBreakerOpenError` sin consumir descriptores de socket ni bloquear los hilos de la aplicación.
 
-### 4.2 Observabilidad, Sanitización de Logs y W3C Tracing
+### 4.2 Rate Limiting Reactivo (HTTP 429) y Backoff
 
-Cuando se configura `config.logger`:
-- **Sanitización Automática de Secretos:** `Payment::SDK::Infrastructure::Logging::Sanitizer` intercepta y enmascara de manera determinista credenciales (`Authorization`, `api_key`, `signing_secret`, `payment_method_token`, `card_number`, `cvv`), protegiendo los logs de auditoría contra fugas de datos sensibles (PCI-DSS compliant).
+Cuando la pasarela responde con HTTP 429 (`Too Many Requests`):
+- `Infrastructure::Adapters::Http::ErrorMapper` detecta la respuesta y extrae la cabecera `Retry-After` (parseando tanto segundos enteros como timestamps RFC 7231).
+- Si el tiempo de espera indicado es menor o igual a `rate_limit_max_delay` (por defecto `10` segundos), el cliente suspende la ejecución (`sleep`) y reintenta de forma transparente.
+- Si el tiempo excede el umbral o los reintentos se agotan, lanza `Payment::SDK::RateLimitError` exponiendo `retry_after_seconds` para que la aplicación llamadora tome decisiones de encolamiento (p. ej. programar un job en Sidekiq para reintentar más tarde).
+
+### 4.3 Observabilidad, Zero-PII Sanitization y W3C Tracing
+
+- **Política Zero-PII Estricta:**
+  - `Payment::SDK::Infrastructure::Logging::Sanitizer` intercepta y enmascara de manera determinista credenciales (`Authorization`, `api_key`, `signing_secret`, `payment_method_token`, `card_number`, `cvv`) tanto en payloads JSON estructurados como en strings crudas vía regex fallback.
+  - Todas las excepciones que heredan de `ApiError` (`InvalidRequestError`, `PaymentDeclinedError`, etc.) aplican sanitización Zero-PII a sus campos `raw_body` y `details`, garantizando que servicios como Sentry, Bugsnag o Rollbar nunca capturen datos sensibles PCI.
 - **Métricas de Latencia:** Cada solicitud registra el tiempo de respuesta preciso en `request_duration_ms` para monitoreo de SLA en sistemas APM (Datadog, OpenTelemetry, CloudWatch).
-- **Trazabilidad Distribuida:** El SDK propaga automáticamente las cabeceras estándar W3C Trace Context (`traceparent`) y correlación HTTP (`X-Request-Id`). Si el llamador ya proporciona un `traceparent` o `X-Request-Id`, se respeta y propaga intacto a través de los microservicios.
+- **Trazabilidad Distribuida:** El SDK propaga automáticamente las cabeceras estándar W3C Trace Context (`traceparent`) y correlación HTTP (`X-Request-Id`).
 
-### 4.3 Instanciación Aislada del Cliente
+### 4.4 TTL y Evicción Anti-Saturación en Transactional Inbox
+
+El adaptador `Infrastructure::Adapters::Persistence::Inbox::Store::InMemory` incluye soporte opcional de `ttl_seconds` (por defecto `86_400` segundos = 24h) con barrido reactivo automático en lecturas y escrituras, eliminando entradas expiradas y previniendo ataques de denegación de servicio (DoS) por agotamiento de memoria RAM en procesos de larga duración.
+
+### 4.5 Instanciación Aislada del Cliente
 
 Puedes usar la configuración global o pasar una instancia específica de `Payment::SDK::Configuration` (esencial para entornos SaaS multi-tenant con credenciales independientes):
 
@@ -369,10 +397,12 @@ Todas las excepciones del SDK heredan de `Payment::SDK::Error < StandardError`:
 | Excepción | Superclase | Cuándo se lanza |
 | :--- | :--- | :--- |
 | `Payment::SDK::ConfigurationError` | `Error` | Configuración inválida del SDK. |
+| `Payment::SDK::CircuitBreakerOpenError` | `Error` | Fallo rápido preventivo cuando el Circuit Breaker entra en estado `:open` tras umbral de fallos consecutivos de 5xx o timeout. |
 | `Payment::SDK::NetworkError` | `Error` | Falla de transporte o socket (tras agotar `max_retries`). |
 | `Payment::SDK::TimeoutError` | `Error` | `Net::OpenTimeout` o `Net::ReadTimeout` (tras agotar `max_retries`). |
 | `Payment::SDK::SignatureVerificationError` | `Error` | Firma de webhook ausente, malformada, fuera de tolerancia o inválida. |
-| `Payment::SDK::ApiError` | `Error` | Base para errores HTTP devueltos por la API (`status_code`, `code`, `details`, `request_id`, `raw_body`). |
+| `Payment::SDK::ApiError` | `Error` | Base para errores HTTP devueltos por la API (`status_code`, `code`, `details`, `request_id`, `raw_body`), con sanitización Zero-PII estricta. |
+| `Payment::SDK::RateLimitError` | `ApiError` | HTTP 429 (`rate_limit_exceeded`) cuando `Retry-After` supera `rate_limit_max_delay`. Expone `retry_after_seconds`. |
 | `Payment::SDK::InvalidRequestError` | `ApiError` | HTTP 4xx o códigos `invalid_amount`, `invalid_currency`, `missing_idempotency_key`, `invalid_intent_state`, o JSON de webhook inválido. |
 | `Payment::SDK::PaymentNotFoundError` | `ApiError` | HTTP 404 o códigos `payment_intent_not_found`, `charge_not_found`, `refund_not_found`. |
 | `Payment::SDK::PaymentDeclinedError` | `ApiError` | Códigos `payment_declined` o `invalid_scenario`. |
@@ -384,6 +414,10 @@ begin
   client.capture_payment_intent("pi_123", amount: 1000, idempotency_key: "cap-pi-123")
 rescue Payment::SDK::PaymentDeclinedError => e
   warn "Pago rechazado (#{e.code}): #{e.message}"
+rescue Payment::SDK::RateLimitError => e
+  warn "Rate limit alcanzado (#{e.code}). Reintentar en #{e.retry_after_seconds}s"
+rescue Payment::SDK::CircuitBreakerOpenError => e
+  warn "Circuito abierto preventivo (#{e.state}). Esperar #{e.reset_timeout}s"
 rescue Payment::SDK::DuplicateRequestError => e
   warn "Conflicto de idempotencia (#{e.status_code}): #{e.request_id}"
 rescue Payment::SDK::PaymentNotFoundError => e
@@ -400,6 +434,7 @@ end
 ## 7. Concurrencia y Thread-Safety
 
 - **Clientes y Comandos:** `Payment::SDK::Client` duplica y valida la configuración al inicializarse (`@config = config.dup`). Cada petición HTTP construye su propia instancia de `Net::HTTP` por llamada, evitando compartir sockets mutables entre hilos concurrentes en Puma o Sidekiq.
+- **Circuit Breaker Thread-Safe:** La clase `Payment::SDK::Infrastructure::Resilience::CircuitBreaker` sincroniza todas las transiciones de estado, contadores de fallos y lecturas mediante `Mutex#synchronize`, con reloj monotónico independiente del reloj de pared del SO.
 - **Adaptadores en Memoria:** `Inbox::Store::InMemory`, `Snapshot::Store::InMemory` y `Mismatch::Reporter::InMemory` sincronizan todas las lecturas y escrituras mediante `Mutex#synchronize` y retornan copias defensivas (`dup`) para evitar mutaciones externas.
 - **Adaptadores Distribuidos:** `Inbox::Store::Redis` delega la atomicidad en comandos nativos de Redis (`SET NX`, `GET`) y soporta pools de conexión concurrentes; `Snapshot::Store::ActiveRecord` aprovecha el connection pool nativo de base de datos por hilo.
 
@@ -408,11 +443,13 @@ end
 ## 8. Auditoría Técnica y Estructura del Proyecto
 
 - 📄 **[Auditoría Técnica y Evaluación de Arquitectura (docs/audit/001-codebase_technical_audit.md)](docs/audit/001-codebase_technical_audit.md)**
+- 🛡️ **[Auditoría Técnica de Resiliencia, Hardening y DevSecOps (docs/audit/002-security_resilience_and_devsecops_audit.md)](docs/audit/002-security_resilience_and_devsecops_audit.md)**
 - 🏛️ **[Especificación de Arquitectura (docs/ARCHITECTURE.md)](docs/ARCHITECTURE.md)**
 - 🌲 **[Estructura Canónica Anotada (TREE.txt)](TREE.txt)**
 - 📐 **[Plantilla Arquetípica de Bounded Context (TREE_TEMPLATE.txt)](TREE_TEMPLATE.txt)**
 - 📋 **[Changelog (CHANGELOG.md)](CHANGELOG.md)**
 - 🗺️ **[Roadmap 003: CI/CD, Observabilidad y Persistencia (docs/roadmap/003-enterprise_cicd_observability_and_persistence.md)](docs/roadmap/003-enterprise_cicd_observability_and_persistence.md)**
+- 🗺️ **[Roadmap 004: Hardening de Seguridad, Resiliencia y DevSecOps (docs/roadmap/004-security_resilience_and_devsecops.md)](docs/roadmap/004-security_resilience_and_devsecops.md)**
 
 ---
 
@@ -422,10 +459,10 @@ El proyecto cuenta con una pirámide de pruebas enterprise dividida en dos suite
 
 ### 9.1 Suite Unitaria Aislada (Rápida y Pura)
 
-No requiere Docker, bases de datos ni conexión a internet. Se ejecuta en ~0.01s:
+No requiere Docker, bases de datos ni conexión a internet. Se ejecuta en ~0.3s:
 
 ```bash
-# Ejecutar las 134 pruebas unitarias con advertencias habilitadas
+# Ejecutar las 150 pruebas unitarias con advertencias habilitadas
 bundle exec rake test
 ```
 
@@ -447,6 +484,9 @@ bundle exec standardrb
 # Auditoría de dependencias y vulnerabilidades conocidas
 bundle exec bundle-audit check --update
 
+# Análisis estático de vulnerabilidades SAST con Brakeman
+bundle exec rake security:brakeman
+
 # Verificar 100% de cobertura de documentación YARD estricta
 bundle exec rake yard
 
@@ -454,11 +494,18 @@ bundle exec rake yard
 gem build payment-sdk.gemspec
 ```
 
-### 9.4 Pipeline de Integración Continua (CI/CD)
+### 9.4 Pipelines de Integración Continua y DevSecOps (CI/CD)
 
-En `.github/workflows/ci.yml`:
-1. **Matriz Multi-Ruby (`verify`):** Ejecuta StandardRB, bundler-audit, suite unitaria (`rake test`), cobertura YARD y compilación de gema en Ruby **3.2**, **3.3** y **3.4**.
-2. **Suite E2E con Caché de Docker (`integration`):** Corre `rake test:integration` descargando y cacheando la imagen de `angelszymczak/payment-sandbox:latest` con `actions/cache@v4` para acelerar los pipelines y evitar descargas redundantes.
+1. **Pipeline de Integración Continua (`.github/workflows/ci.yml`):**
+   - **Matriz Multi-Ruby (`verify`):** Ejecuta StandardRB, bundler-audit, Brakeman SAST, suite unitaria (`rake test`), cobertura YARD y compilación de gema en Ruby **3.2**, **3.3** y **3.4**.
+   - **Suite E2E con Caché de Docker (`integration`):** Corre `rake test:integration` descargando y cacheando la imagen de `angelszymczak/payment-sandbox:latest` con `actions/cache@v4` para acelerar los pipelines y evitar descargas redundantes.
+2. **Pipeline DevSecOps Multi-Capa (`.github/workflows/security.yml`):**
+   - **Secret Scanning:** Gitleaks con allowlist para prevenir filtraciones de credenciales.
+   - **SAST Multi-Motor:** Brakeman y Semgrep OSS (`p/ruby`, `p/owasp-top-ten`, `p/cwe-top-25`) exportando reportes SARIF a GitHub Security.
+   - **Software Supply Chain:** Generación y archivado de SBOM en formato CycloneDX (`cyclonedx-json`).
+   - **Integración SaaS Condicional:** Jobs preparados para SonarCloud/SonarQube y Snyk activados mediante tokens de repositorio.
+3. **Análisis Semántico Profundo (`.github/workflows/codeql.yml`):**
+   - Análisis de flujos de datos y taint analysis para Ruby con GitHub CodeQL y consultas de seguridad extendida.
 
 ### Convenciones para Contribuciones
 1. **Context-First:** Todo nuevo componente debe ubicarse dentro de su Bounded Context (`lib/payment/sdk/<context>/`).

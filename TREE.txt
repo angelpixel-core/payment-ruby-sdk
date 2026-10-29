@@ -2,8 +2,11 @@
 ├── .github                                                         # Configuraciones de automatización y flujos de trabajo de GitHub
 │   └── workflows                                                   # Pipelines de integración y entrega continua en GitHub Actions
 │       ├── ci.yml                                                  # Pipeline de CI multi-ruby, StandardRB, bundler-audit, YARD y suite E2E
+│       ├── codeql.yml                                              # Pipeline de análisis semántico SAST y exportación SARIF con GitHub CodeQL
 │       ├── documentation.yml                                       # Pipeline de generación y despliegue continuo de documentación YARD a GitHub Pages
-│       └── release.yml                                             # Pipeline de automatización de releases semánticas y changelog vía Release Please
+│       ├── release.yml                                             # Pipeline de automatización de releases semánticas y changelog vía Release Please
+│       └── security.yml                                            # Pipeline DevSecOps multi-capa: Gitleaks, Brakeman, Semgrep, CycloneDX y SaaS
+├── .gitleaks.toml                                                  # Configuración y allowlists de escaneo de secretos con Gitleaks
 ├── .release-please-config.json                                     # Configuración de plugins y paquetes para Release Please
 ├── .release-please-manifest.json                                   # Manifiesto de versiones para control de releases semánticas
 ├── .yardopts                                                       # Configuración del generador de documentación YARD con strict checking
@@ -53,8 +56,10 @@
 │   │   │   │   │   │           └── in_memory.rb                    # Reportero en memoria de discrepancias detectadas en conciliación
 │   │   │   │   │   └── webhooks                                    # Adaptadores auxiliares para procesamiento de webhooks
 │   │   │   │   │       └── event_parser.rb                         # Parser seguro de payloads crudos a entidades WebhookEvent
-│   │   │   │   └── logging                                         # Infraestructura de observabilidad y registro estructurado
-│   │   │   │       └── sanitizer.rb                                # Filtro estructurado y sanitizador de logs con enmascaramiento de tokens
+│   │   │   │   ├── logging                                         # Infraestructura de observabilidad y registro estructurado
+│   │   │   │   │   └── sanitizer.rb                                # Filtro estructurado y sanitizador de logs con enmascaramiento de tokens
+│   │   │   │   └── resilience                                      # Mecanismos de resiliencia de runtime y tolerancia a fallos
+│   │   │   │       └── circuit_breaker.rb                          # Circuit breaker nativo thread-safe para aislamiento de fallas upstream
 │   │   │   ├── payments                                            # Bounded Context: Pagos, cobros y transacciones primarias
 │   │   │   │   ├── application                                     # Capa de aplicación del Bounded Context Payments
 │   │   │   │   │   ├── commands                                    # Comandos de mutación de pagos (CQS Write)
@@ -140,6 +145,7 @@
 ├── payment-sdk.gemspec                                             # Especificación de la gema, metadatos, archivos y dependencias de runtime
 ├── Rakefile                                                        # Definición de tareas Rake para compilación y suite de pruebas Minitest
 ├── README.md                                                       # Documentación de arquitectura, guías de integración y ejemplos ejecutables
+├── sonar-project.properties                                        # Configuración de escaneo estático y reglas de calidad para SonarCloud/SonarQube
 ├── test                                                            # Directorio raíz de la suite de pruebas unitarias y de integración
 │   ├── integration                                                 # Suite de pruebas de integración E2E contra contenedor de sandbox
 │   │   ├── payment_lifecycle_e2e_test.rb                           # Pruebas E2E de ciclo de vida completo de pagos y reembolsos
@@ -176,8 +182,10 @@
 │   │       │   │   │           └── in_memory_test.rb               # Pruebas de recolección en memoria de desajustes contables
 │   │       │   │   └── webhooks                                    # Pruebas de adaptadores auxiliares de webhook
 │   │       │   │       └── event_parser_test.rb                    # Pruebas de parsing y extracción de datos tipados desde JSON
-│   │       │   └── logging                                         # Pruebas de infraestructura de logging
-│   │       │       └── sanitizer_test.rb                           # Pruebas unitarias de sanitización de logs y ofuscación de credenciales
+│   │       │   ├── logging                                         # Pruebas de infraestructura de logging
+│   │       │   │   └── sanitizer_test.rb                           # Pruebas unitarias de sanitización de logs y ofuscación de credenciales
+│   │       │   └── resilience                                      # Pruebas de componentes de resiliencia y tolerancia a fallos
+│   │       │       └── circuit_breaker_test.rb                     # Pruebas de transición de estados y thread safety del Circuit Breaker
 │   │       ├── payments                                            # Pruebas del Bounded Context Payments
 │   │       │   ├── application                                     # Pruebas de casos de uso y comandos de pagos
 │   │       │   │   ├── commands                                    # Pruebas de comandos de pagos
