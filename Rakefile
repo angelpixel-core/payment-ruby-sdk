@@ -41,6 +41,19 @@ rescue LoadError
   end
 end
 
+namespace :security do
+  desc "Run Brakeman SAST scan"
+  task :brakeman do
+    sh "bundle exec brakeman --force-scan --no-pager -w2"
+  end
+
+  desc "Alias for bundle:audit under security namespace"
+  task audit: "bundle:audit"
+end
+
+desc "Alias for security:brakeman"
+task brakeman: "security:brakeman"
+
 begin
   require "yard"
 

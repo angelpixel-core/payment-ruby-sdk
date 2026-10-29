@@ -8,8 +8,10 @@ gem "minitest", ">= 5.20", "< 7"
 gem "rake", "~> 13.0"
 
 group :development, :test do
+  gem "brakeman", require: false
   gem "bundler-audit", require: false
   gem "logger"
+  gem "reline", require: false
   gem "standard"
   gem "testcontainers", require: false
   gem "webrick", "~> 1.8" # required by `yard server` on Ruby >= 3.0

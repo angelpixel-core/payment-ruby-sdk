@@ -98,18 +98,18 @@ flowchart TD
 ---
 
 ### Fase 3: Pipeline DevSecOps Multi-Capa (CI/CD)
-- [ ] **3.1 Scanners SAST Nativos**:
-  - [ ] Agregar gema `brakeman` en `:development, :test` del `Gemfile` y tarea `rake security:brakeman`.
-  - [ ] Configurar job de GitHub Actions para ejecutar `Brakeman` con umbral de fallo en warnings de alta/media severidad.
-  - [ ] Configurar step o workflow para `Semgrep` con reglas comunitarias `p/ruby`, `p/owasp-top-ten` y `p/cwe-top-25`.
-- [ ] **3.2 Análisis Semántico GitHub CodeQL**:
-  - [ ] Crear workflow `.github/workflows/codeql.yml` para compilar la base de datos de CodeQL para Ruby y subir los resultados SARIF a la pestaña de Seguridad.
-- [ ] **3.3 Escaneo de Secretos con Gitleaks**:
-  - [ ] Integrar step de `Gitleaks` en GitHub Actions para verificar que ningún commit contenga claves privadas, tokens de sandbox o contraseñas reales.
-- [ ] **3.4 Integración SaaS (SonarQube/SonarCloud & Snyk)**:
-  - [ ] Crear `.github/workflows/security.yml` con jobs preparados para SonarCloud y Snyk con condicionales `if: env.SONAR_TOKEN != ''` y `if: env.SNYK_TOKEN != ''`.
-- [ ] **3.5 Supply Chain Security & SBOM**:
-  - [ ] Agregar generación de SBOM (Software Bill of Materials) en formato CycloneDX via GitHub Actions.
+- [x] **3.1 Scanners SAST Nativos**:
+  - [x] Agregar gema `brakeman` en `:development, :test` del `Gemfile` y tarea `rake security:brakeman`.
+  - [x] Configurar job de GitHub Actions para ejecutar `Brakeman` con umbral de fallo en warnings de alta/media severidad.
+  - [x] Configurar step o workflow para `Semgrep` con reglas comunitarias `p/ruby`, `p/owasp-top-ten` y `p/cwe-top-25`.
+- [x] **3.2 Análisis Semántico GitHub CodeQL**:
+  - [x] Crear workflow `.github/workflows/codeql.yml` para compilar la base de datos de CodeQL para Ruby y subir los resultados SARIF a la pestaña de Seguridad.
+- [x] **3.3 Escaneo de Secretos con Gitleaks**:
+  - [x] Integrar step de `Gitleaks` en GitHub Actions para verificar que ningún commit contenga claves privadas, tokens de sandbox o contraseñas reales.
+- [x] **3.4 Integración SaaS (SonarQube/SonarCloud & Snyk)**:
+  - [x] Crear `.github/workflows/security.yml` con jobs preparados para SonarCloud y Snyk con condicionales `if: env.SONAR_TOKEN != ''` y `if: env.SNYK_TOKEN != ''`.
+- [x] **3.5 Supply Chain Security & SBOM**:
+  - [x] Agregar generación de SBOM (Software Bill of Materials) en formato CycloneDX via GitHub Actions.
 
 ---
 

@@ -39,6 +39,9 @@ jobs:
       - name: Run bundler-audit security check
         run: bundle exec bundle-audit check --update
 
+      - name: Run Brakeman SAST security check
+        run: bundle exec rake security:brakeman
+
       - name: Run test suite
         run: bundle exec rake test
 
