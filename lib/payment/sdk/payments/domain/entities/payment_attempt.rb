@@ -41,11 +41,10 @@ module Payment
               freeze
             end
 
-            # @return [Boolean] `true` when status is `:successful` or `:succeeded`
-            def successful?
-              @status == :successful || @status == :succeeded
+            # @return [Boolean] `true` when status is `:succeeded` or `:successful`
+            def succeeded?
+              @status == :succeeded || @status == :successful
             end
-            alias_method :succeeded?, :successful?
 
             # @return [Boolean] `true` when status is `:failed`
             def failed?

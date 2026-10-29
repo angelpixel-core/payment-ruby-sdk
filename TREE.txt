@@ -13,11 +13,13 @@
 ├── docs                                                            # Documentación técnica, arquitectónica y guías estratégicas
 │   ├── ARCHITECTURE.md                                             # Especificación técnica de Clean Architecture y Bounded Contexts
 │   ├── audit                                                       # Informes de auditoría técnica, concurrencia y resiliencia
-│   │   └── 001-codebase_technical_audit.md                         # Auditoría técnica de arquitectura, concurrencia, resiliencia y roadmap
+│   │   ├── 001-codebase_technical_audit.md                         # Auditoría técnica de arquitectura, concurrencia, resiliencia y roadmap
+│   │   └── 002-security_resilience_and_devsecops_audit.md          # Auditoría técnica de hardening de seguridad, resiliencia y DevSecOps
 │   └── roadmap                                                     # Planes de evolución, migración y actas de diseño
 │       ├── 001-architecture_normalization_and_bounded_contexts.md  # Roadmap inicial de diseño e introducción de Bounded Contexts
 │       ├── 002-context_first_normalization_and_audit.md            # Roadmap estratégico de reorganización Context-First y release
-│       └── 003-enterprise_cicd_observability_and_persistence.md    # Roadmap de CI/CD enterprise, observabilidad, persistencia distribuida y E2E
+│       ├── 003-enterprise_cicd_observability_and_persistence.md    # Roadmap de CI/CD enterprise, observabilidad, persistencia distribuida y E2E
+│       └── 004-security_resilience_and_devsecops.md                # Roadmap de hardening de seguridad, resiliencia de runtime y DevSecOps
 ├── Gemfile                                                         # Definición de dependencias y versiones de gemas para Bundler
 ├── Gemfile.lock                                                    # Árbol de resolución determinista de dependencias
 ├── lib                                                             # Directorio principal de código fuente de la gema

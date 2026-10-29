@@ -22,8 +22,8 @@ class ReconciliationInterfacesClientTest < Minitest::Test
     @client = Payment::SDK::Reconciliation::Interfaces::Client.new(http_client: @http_client)
   end
 
-  def test_get_report
-    report = @client.get_report(start_date: "2026-01-01")
+  def test_get_transaction_report
+    report = @client.get_transaction_report(start_date: "2026-01-01")
 
     assert_equal :get, @http_client.last_request[:method]
     assert_equal "/reports/transactions", @http_client.last_request[:path]
@@ -31,8 +31,8 @@ class ReconciliationInterfacesClientTest < Minitest::Test
     assert_equal [{id: "rep_1", transactions: 1}], report
   end
 
-  def test_get_snapshot
-    snapshot = @client.get_snapshot
+  def test_get_transaction_snapshot
+    snapshot = @client.get_transaction_snapshot
 
     assert_equal :get, @http_client.last_request[:method]
     assert_equal "/reports/transactions", @http_client.last_request[:path]

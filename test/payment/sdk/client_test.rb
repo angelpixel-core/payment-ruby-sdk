@@ -89,12 +89,12 @@ class ClientTest < Minitest::Test
     assert_equal :process_webhook, @client.process_webhook(payload: "{}", signature_header: "sig", projection: nil)[:delegated]
 
     reconciliation_mock = Object.new
-    def reconciliation_mock.get_report(**opts)
-      {delegated: :get_report, opts: opts}
+    def reconciliation_mock.get_transaction_report(**opts)
+      {delegated: :get_transaction_report, opts: opts}
     end
 
-    def reconciliation_mock.get_snapshot(**opts)
-      {delegated: :get_snapshot, opts: opts}
+    def reconciliation_mock.get_transaction_snapshot(**opts)
+      {delegated: :get_transaction_snapshot, opts: opts}
     end
 
     def reconciliation_mock.reconcile(**opts)
@@ -102,8 +102,8 @@ class ClientTest < Minitest::Test
     end
     @client.instance_variable_set(:@reconciliation, reconciliation_mock)
 
-    assert_equal :get_report, @client.get_transaction_report[:delegated]
-    assert_equal :get_snapshot, @client.get_transaction_snapshot[:delegated]
+    assert_equal :get_transaction_report, @client.get_transaction_report[:delegated]
+    assert_equal :get_transaction_snapshot, @client.get_transaction_snapshot[:delegated]
     assert_equal :reconcile, @client.reconcile(local_records: [], run_id: "run_1")[:delegated]
   end
 end

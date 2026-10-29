@@ -9,7 +9,7 @@ module Payment
           # Compares local transaction records against the remote platform snapshot,
           # persists per-intent reconciliation snapshots, and reports any drift.
           class Reconcile
-            # @param snapshot_client [#get_transaction_snapshot, #get_snapshot] client used to fetch remote records
+            # @param snapshot_client [#get_transaction_snapshot] client used to fetch remote records
             # @param snapshot_store [Domain::Ports::Snapshot::Store] store where reconciliation snapshots are persisted
             # @param mismatch_reporter [Domain::Ports::Mismatch::Reporter] reporter notified when drift is detected
             def initialize(snapshot_client:, snapshot_store:, mismatch_reporter:)
@@ -60,10 +60,8 @@ module Payment
             def fetch_remote_records
               raw = if @snapshot_client.respond_to?(:get_transaction_snapshot)
                 @snapshot_client.get_transaction_snapshot
-              elsif @snapshot_client.respond_to?(:get_snapshot)
-                @snapshot_client.get_snapshot
               else
-                raise ArgumentError, "snapshot_client must implement #get_transaction_snapshot or #get_snapshot"
+                raise ArgumentError, "snapshot_client must implement #get_transaction_snapshot"
               end
 
               if raw.is_a?(Hash) && (raw[:transactions_snapshot] || raw["transactions_snapshot"])

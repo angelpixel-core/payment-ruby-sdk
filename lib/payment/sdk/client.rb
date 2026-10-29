@@ -135,7 +135,7 @@ module Payment
       # @param opts [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
       # @return [Array<Hash>, Hash] parsed report payload
       def get_transaction_report(query_params = {}, **opts)
-        reconciliation.get_report(**query_params, **opts)
+        reconciliation.get_transaction_report(**query_params, **opts)
       end
 
       # Retrieves a deterministic transaction snapshot for reconciliation.
@@ -144,7 +144,7 @@ module Payment
       # @param opts [Hash] optional query options (`:request_id`, `:traceparent`, etc.)
       # @return [Array<Hash>, Hash] parsed snapshot payload
       def get_transaction_snapshot(query_params = {}, **opts)
-        reconciliation.get_snapshot(**query_params, **opts)
+        reconciliation.get_transaction_snapshot(**query_params, **opts)
       end
 
       # Verifies, deduplicates (inbox), and projects an incoming webhook.

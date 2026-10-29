@@ -8,9 +8,9 @@ class InfrastructureAdaptersPersistenceInboxStoreInMemoryTest < Minitest::Test
     @store = Payment::SDK::Infrastructure::Adapters::Persistence::Inbox::Store::InMemory.new
   end
 
-  def test_persist_and_find
+  def test_save_and_find
     entry = {delivery_id: "del_1", raw_payload: "{}", status: :received}
-    persisted = @store.persist(entry)
+    persisted = @store.save(entry)
 
     assert_equal "del_1", persisted[:delivery_id]
     assert_equal :received, persisted[:status]
@@ -21,14 +21,14 @@ class InfrastructureAdaptersPersistenceInboxStoreInMemoryTest < Minitest::Test
 
   def test_duplicate_delivery_id_raises_error
     entry = {delivery_id: "del_1", raw_payload: "{}", status: :received}
-    @store.persist(entry)
+    @store.save(entry)
 
-    assert_raises(ArgumentError) { @store.persist(entry) }
+    assert_raises(ArgumentError) { @store.save(entry) }
   end
 
   def test_update_entry
     entry = {delivery_id: "del_1", raw_payload: "{}", status: :received}
-    @store.persist(entry)
+    @store.save(entry)
 
     updated = @store.update("del_1", status: :processed)
     assert_equal :processed, updated[:status]

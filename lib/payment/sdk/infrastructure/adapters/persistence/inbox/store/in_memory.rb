@@ -37,7 +37,7 @@ module Payment
                 # @param entry [Hash] inbox entry with `:delivery_id`
                 # @return [Hash] shallow copy of the stored entry
                 # @raise [ArgumentError] when `entry[:delivery_id]` is already present
-                def persist(entry)
+                def save(entry)
                   @mutex.synchronize do
                     if @store.key?(entry[:delivery_id])
                       raise ArgumentError, "Duplicate delivery_id: #{entry[:delivery_id]}"
@@ -47,7 +47,6 @@ module Payment
                     entry.dup
                   end
                 end
-                alias_method :save, :persist
 
                 # Merges attributes into an existing inbox entry.
                 #

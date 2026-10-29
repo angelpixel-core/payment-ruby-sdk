@@ -20,12 +20,17 @@ class PaymentsDomainEntitiesPaymentAttemptTest < Minitest::Test
     assert attempt.frozen?
   end
 
-  def test_successful_predicate
+  def test_succeeded_predicate
     attempt = Payment::SDK::Payments::Domain::Entities::PaymentAttempt.new(
       id: "pa_123", payment_intent_id: "pi_123", status: "succeeded",
       payment_method_type: "card"
     )
     assert attempt.succeeded?
-    assert attempt.successful?
+
+    legacy_attempt = Payment::SDK::Payments::Domain::Entities::PaymentAttempt.new(
+      id: "pa_124", payment_intent_id: "pi_123", status: "successful",
+      payment_method_type: "card"
+    )
+    assert legacy_attempt.succeeded?
   end
 end

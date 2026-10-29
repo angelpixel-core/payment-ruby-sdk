@@ -72,7 +72,6 @@ module Payment
 
                   deserialize(json)
                 end
-                alias_method :persist, :save
 
                 # Merges attributes into an existing inbox entry.
                 #
