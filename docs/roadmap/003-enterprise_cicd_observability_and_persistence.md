@@ -115,15 +115,15 @@ graph TD
 ---
 
 ### Fase 4: Adaptadores Conducidos de Persistencia Distribuida
-- [ ] **4.1 Adaptador `Inbox::Store::Redis`**:
-  - [ ] Crear `lib/payment/sdk/infrastructure/adapters/persistence/inbox/store/redis.rb` implementando el puerto `Webhooks::Domain::Ports::Inbox::Store`.
-  - [ ] Soportar operaciones atómicas con TTL configurable para evitar saturación de memoria.
-  - [ ] Diseñado mediante *duck-typing* para aceptar cualquier cliente compatible con Redis (ej. `redis`, `redis-client`).
-- [ ] **4.2 Adaptador `Snapshot::Store::ActiveRecord` / `SQL`**:
-  - [ ] Crear `lib/payment/sdk/infrastructure/adapters/persistence/snapshot/store/active_record.rb` implementando el puerto `Reconciliation::Domain::Ports::Snapshot::Store`.
-  - [ ] Mapeo transparente entre entidades de dominio y registros de base de datos relacional.
-- [ ] **4.3 Tests Espejo y Mocks**:
-  - [ ] Pruebas unitarias completas con dobles de prueba sin exigir Redis ni DB local corriendo para pasar la suite.
+- [x] **4.1 Adaptador `Inbox::Store::Redis`**:
+  - [x] Crear `lib/payment/sdk/infrastructure/adapters/persistence/inbox/store/redis.rb` implementando el puerto `Webhooks::Domain::Ports::Inbox::Store`.
+  - [x] Soportar operaciones atómicas con TTL configurable para evitar saturación de memoria.
+  - [x] Diseñado mediante *duck-typing* para aceptar cualquier cliente compatible con Redis (ej. `redis`, `redis-client`).
+- [x] **4.2 Adaptador `Snapshot::Store::ActiveRecord` / `SQL`**:
+  - [x] Crear `lib/payment/sdk/infrastructure/adapters/persistence/snapshot/store/active_record.rb` implementando el puerto `Reconciliation::Domain::Ports::Snapshot::Store`.
+  - [x] Mapeo transparente entre entidades de dominio y registros de base de datos relacional.
+- [x] **4.3 Tests Espejo y Mocks**:
+  - [x] Pruebas unitarias completas con dobles de prueba sin exigir Redis ni DB local corriendo para pasar la suite.
 
 ---
 
