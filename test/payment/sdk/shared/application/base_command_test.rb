@@ -7,7 +7,7 @@ class SharedApplicationBaseCommandTest < Minitest::Test
   class DummyCommand < Payment::SDK::Shared::Application::BaseCommand
     def call(idempotency_key: nil)
       key = normalize_idempotency_key(idempotency_key)
-      { key: key.value }
+      {key: key.value}
     end
   end
 
@@ -40,6 +40,4 @@ class SharedApplicationBaseCommandTest < Minitest::Test
     result_vo = @cmd.call(idempotency_key: vo_key)
     assert_equal "vo-key", result_vo[:key]
   end
-
-
 end

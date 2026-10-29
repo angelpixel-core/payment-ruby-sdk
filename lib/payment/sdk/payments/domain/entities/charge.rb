@@ -30,7 +30,7 @@ module Payment
             # @param currency [String, nil] optional currency code
             # @param created_at [String, Time, nil] optional creation timestamp
             def initialize(id:, payment_intent_id:, amount:, captured_amount:, status:,
-                           currency: nil, created_at: nil)
+              currency: nil, created_at: nil)
               @id = id
               @payment_intent_id = payment_intent_id
               @amount = amount

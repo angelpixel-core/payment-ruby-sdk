@@ -8,8 +8,8 @@ class PaymentsApplicationCommandsIntentsCreateTest < Minitest::Test
     attr_reader :last_request
 
     def request(method:, path:, headers: {}, body: nil, query_params: {})
-      @last_request = { method: method, path: path, headers: headers, body: body, query_params: query_params }
-      { id: "pi_123", status: "requires_payment_method" }
+      @last_request = {method: method, path: path, headers: headers, body: body, query_params: query_params}
+      {id: "pi_123", status: "requires_payment_method"}
     end
   end
 
@@ -37,7 +37,7 @@ class PaymentsApplicationCommandsIntentsCreateTest < Minitest::Test
     assert_equal "manual", req[:body][:capture_method]
     assert_equal "mer_1", req[:body][:merchant_id]
     assert_equal "cus_1", req[:body][:customer_id]
-    assert_equal({ id: "pi_123", status: "requires_payment_method" }, result)
+    assert_equal({id: "pi_123", status: "requires_payment_method"}, result)
   end
 
   def test_requires_idempotency_key

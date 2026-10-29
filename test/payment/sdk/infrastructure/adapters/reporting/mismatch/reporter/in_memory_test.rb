@@ -9,18 +9,18 @@ class InfrastructureAdaptersReportingMismatchReporterInMemoryTest < Minitest::Te
   end
 
   def test_report_mismatch_appends_to_reports
-    @reporter.report(snapshot: { id: "snap_1", status: :status_drift })
+    @reporter.report(snapshot: {id: "snap_1", status: :status_drift})
     assert_equal 1, @reporter.reports.size
     assert_equal :status_drift, @reporter.reports.first[:status]
   end
 
   def test_report_ignores_perfect_matches
-    @reporter.report(snapshot: { id: "snap_1", status: :match })
+    @reporter.report(snapshot: {id: "snap_1", status: :match})
     assert_empty @reporter.reports
   end
 
   def test_report_dup_isolation
-    snapshot = { id: "snap_1", status: :amount_drift }
+    snapshot = {id: "snap_1", status: :amount_drift}
     @reporter.report(snapshot: snapshot)
 
     snapshot[:status] = :match
@@ -28,7 +28,7 @@ class InfrastructureAdaptersReportingMismatchReporterInMemoryTest < Minitest::Te
   end
 
   def test_clear_empties_reports
-    @reporter.report(snapshot: { id: "snap_1", status: :amount_drift })
+    @reporter.report(snapshot: {id: "snap_1", status: :amount_drift})
     @reporter.clear!
     assert_empty @reporter.reports
   end
@@ -36,7 +36,7 @@ class InfrastructureAdaptersReportingMismatchReporterInMemoryTest < Minitest::Te
   def test_thread_safety
     threads = 10.times.map do |i|
       Thread.new do
-        @reporter.report(snapshot: { id: "snap_#{i}", status: :drift, index: i })
+        @reporter.report(snapshot: {id: "snap_#{i}", status: :drift, index: i})
       end
     end
     threads.each(&:join)

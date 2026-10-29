@@ -41,7 +41,7 @@ class WebhooksInterfacesClientTest < Minitest::Test
       delivery_id: "del_002",
       event_id: "evt_002",
       event_type: "charge.succeeded",
-      data: { object: { id: "ch_002" } }
+      data: {object: {id: "ch_002"}}
     })
 
     assert_equal "del_002", event.delivery_id

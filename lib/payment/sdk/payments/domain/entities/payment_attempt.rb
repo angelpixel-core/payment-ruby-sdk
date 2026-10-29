@@ -30,7 +30,7 @@ module Payment
             # @param error_message [String, nil] optional error message
             # @param created_at [String, Time, nil] optional creation timestamp
             def initialize(id:, payment_intent_id:, status:, payment_method_type:,
-                           error_code: nil, error_message: nil, created_at: nil)
+              error_code: nil, error_message: nil, created_at: nil)
               @id = id
               @payment_intent_id = payment_intent_id
               @status = status.to_sym

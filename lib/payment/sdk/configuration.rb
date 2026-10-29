@@ -47,8 +47,7 @@ module Payment
       #
       # @return [Payment::SDK::Configuration]
       def dup
-        copy = super
-        copy
+        super
       end
 
       # Validates numeric timeout and retry invariants.

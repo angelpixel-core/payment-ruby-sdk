@@ -9,7 +9,7 @@ class InfrastructureAdaptersPersistenceInboxStoreInMemoryTest < Minitest::Test
   end
 
   def test_persist_and_find
-    entry = { delivery_id: "del_1", raw_payload: "{}", status: :received }
+    entry = {delivery_id: "del_1", raw_payload: "{}", status: :received}
     persisted = @store.persist(entry)
 
     assert_equal "del_1", persisted[:delivery_id]
@@ -20,14 +20,14 @@ class InfrastructureAdaptersPersistenceInboxStoreInMemoryTest < Minitest::Test
   end
 
   def test_duplicate_delivery_id_raises_error
-    entry = { delivery_id: "del_1", raw_payload: "{}", status: :received }
+    entry = {delivery_id: "del_1", raw_payload: "{}", status: :received}
     @store.persist(entry)
 
     assert_raises(ArgumentError) { @store.persist(entry) }
   end
 
   def test_update_entry
-    entry = { delivery_id: "del_1", raw_payload: "{}", status: :received }
+    entry = {delivery_id: "del_1", raw_payload: "{}", status: :received}
     @store.persist(entry)
 
     updated = @store.update("del_1", status: :processed)
@@ -36,7 +36,7 @@ class InfrastructureAdaptersPersistenceInboxStoreInMemoryTest < Minitest::Test
   end
 
   def test_save_and_update_status
-    entry = { delivery_id: "del_2", raw_payload: "{}", status: :received }
+    entry = {delivery_id: "del_2", raw_payload: "{}", status: :received}
     @store.save(entry)
 
     @store.update_status(delivery_id: "del_2", status: :failed, failure_reason: "err")

@@ -8,11 +8,11 @@ class ReconciliationInterfacesClientTest < Minitest::Test
     attr_reader :last_request
 
     def request(method:, path:, headers: {}, body: nil, query_params: {})
-      @last_request = { method: method, path: path, headers: headers, body: body, query_params: query_params }
+      @last_request = {method: method, path: path, headers: headers, body: body, query_params: query_params}
       if query_params[:view] == "snapshot"
-        [{ payment_intent_id: "pi_123", status: "succeeded", amount: 1000 }]
+        [{payment_intent_id: "pi_123", status: "succeeded", amount: 1000}]
       else
-        [{ id: "rep_1", transactions: 1 }]
+        [{id: "rep_1", transactions: 1}]
       end
     end
   end
@@ -27,8 +27,8 @@ class ReconciliationInterfacesClientTest < Minitest::Test
 
     assert_equal :get, @http_client.last_request[:method]
     assert_equal "/reports/transactions", @http_client.last_request[:path]
-    assert_equal({ start_date: "2026-01-01" }, @http_client.last_request[:query_params])
-    assert_equal [{ id: "rep_1", transactions: 1 }], report
+    assert_equal({start_date: "2026-01-01"}, @http_client.last_request[:query_params])
+    assert_equal [{id: "rep_1", transactions: 1}], report
   end
 
   def test_get_snapshot
@@ -36,13 +36,13 @@ class ReconciliationInterfacesClientTest < Minitest::Test
 
     assert_equal :get, @http_client.last_request[:method]
     assert_equal "/reports/transactions", @http_client.last_request[:path]
-    assert_equal({ view: "snapshot" }, @http_client.last_request[:query_params])
-    assert_equal [{ payment_intent_id: "pi_123", status: "succeeded", amount: 1000 }], snapshot
+    assert_equal({view: "snapshot"}, @http_client.last_request[:query_params])
+    assert_equal [{payment_intent_id: "pi_123", status: "succeeded", amount: 1000}], snapshot
   end
 
   def test_reconcile
     local_records = [
-      { payment_intent_id: "pi_123", status: "succeeded", amount: 1000 }
+      {payment_intent_id: "pi_123", status: "succeeded", amount: 1000}
     ]
 
     results = @client.reconcile(local_records: local_records, run_id: "run_test_1")

@@ -8,8 +8,8 @@ class PaymentsApplicationCommandsIntentsCaptureTest < Minitest::Test
     attr_reader :last_request
 
     def request(method:, path:, headers: {}, body: nil, query_params: {})
-      @last_request = { method: method, path: path, headers: headers, body: body, query_params: query_params }
-      { id: "pi_123", status: "succeeded", captured_amount: 500 }
+      @last_request = {method: method, path: path, headers: headers, body: body, query_params: query_params}
+      {id: "pi_123", status: "succeeded", captured_amount: 500}
     end
   end
 

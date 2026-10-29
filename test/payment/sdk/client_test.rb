@@ -38,11 +38,25 @@ class ClientTest < Minitest::Test
     payments_mock = Object.new
     def payments_mock.intents
       @intents ||= Struct.new(:dummy) do
-        def create(**opts); { delegated: :create_intent, opts: opts }; end
-        def confirm(id, **opts); { delegated: :confirm_intent, id: id, opts: opts }; end
-        def capture(id, **opts); { delegated: :capture_intent, id: id, opts: opts }; end
-        def get(id); { delegated: :get_intent, id: id }; end
-        def get_lifecycle(id); { delegated: :get_lifecycle, id: id }; end
+        def create(**opts)
+          {delegated: :create_intent, opts: opts}
+        end
+
+        def confirm(id, **opts)
+          {delegated: :confirm_intent, id: id, opts: opts}
+        end
+
+        def capture(id, **opts)
+          {delegated: :capture_intent, id: id, opts: opts}
+        end
+
+        def get(id)
+          {delegated: :get_intent, id: id}
+        end
+
+        def get_lifecycle(id)
+          {delegated: :get_lifecycle, id: id}
+        end
       end.new(nil)
     end
     @client.instance_variable_set(:@payments, payments_mock)
@@ -54,23 +68,38 @@ class ClientTest < Minitest::Test
     assert_equal :get_lifecycle, @client.get_payment_lifecycle("pi_1")[:delegated]
 
     refunds_mock = Object.new
-    def refunds_mock.create(**opts); { delegated: :create_refund, opts: opts }; end
-    def refunds_mock.get(id); { delegated: :get_refund, id: id }; end
+    def refunds_mock.create(**opts)
+      {delegated: :create_refund, opts: opts}
+    end
+
+    def refunds_mock.get(id)
+      {delegated: :get_refund, id: id}
+    end
     @client.instance_variable_set(:@refunds, refunds_mock)
 
     assert_equal :create_refund, @client.create_refund(charge_id: "ch_1")[:delegated]
     assert_equal :get_refund, @client.get_refund("re_1")[:delegated]
 
     webhooks_mock = Object.new
-    def webhooks_mock.process(**opts); { delegated: :process_webhook, opts: opts }; end
+    def webhooks_mock.process(**opts)
+      {delegated: :process_webhook, opts: opts}
+    end
     @client.instance_variable_set(:@webhooks, webhooks_mock)
 
     assert_equal :process_webhook, @client.process_webhook(payload: "{}", signature_header: "sig", projection: nil)[:delegated]
 
     reconciliation_mock = Object.new
-    def reconciliation_mock.get_report(**opts); { delegated: :get_report, opts: opts }; end
-    def reconciliation_mock.get_snapshot(**opts); { delegated: :get_snapshot, opts: opts }; end
-    def reconciliation_mock.reconcile(**opts); { delegated: :reconcile, opts: opts }; end
+    def reconciliation_mock.get_report(**opts)
+      {delegated: :get_report, opts: opts}
+    end
+
+    def reconciliation_mock.get_snapshot(**opts)
+      {delegated: :get_snapshot, opts: opts}
+    end
+
+    def reconciliation_mock.reconcile(**opts)
+      {delegated: :reconcile, opts: opts}
+    end
     @client.instance_variable_set(:@reconciliation, reconciliation_mock)
 
     assert_equal :get_report, @client.get_transaction_report[:delegated]

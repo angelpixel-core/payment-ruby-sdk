@@ -6,7 +6,7 @@ require "payment/sdk/shared/application/base_query"
 class SharedApplicationBaseQueryTest < Minitest::Test
   class DummyQuery < Payment::SDK::Shared::Application::BaseQuery
     def call(id:)
-      { queried: id }
+      {queried: id}
     end
   end
 
@@ -27,8 +27,6 @@ class SharedApplicationBaseQueryTest < Minitest::Test
 
   def test_call_executes_query
     result = @query.call(id: "123")
-    assert_equal({ queried: "123" }, result)
+    assert_equal({queried: "123"}, result)
   end
-
-
 end

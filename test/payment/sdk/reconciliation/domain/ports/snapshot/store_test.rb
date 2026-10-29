@@ -14,7 +14,7 @@ class ReconciliationDomainPortsSnapshotStoreTest < Minitest::Test
 
   def test_save_raises_not_implemented
     assert_raises(NotImplementedError) do
-      @store.save({ id: "snap_1" })
+      @store.save({id: "snap_1"})
     end
   end
 

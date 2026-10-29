@@ -8,8 +8,8 @@ class ReconciliationApplicationQueriesSnapshotsGetTest < Minitest::Test
     attr_reader :last_request
 
     def request(method:, path:, headers: {}, body: nil, query_params: {})
-      @last_request = { method: method, path: path, headers: headers, body: body, query_params: query_params }
-      [{ "payment_intent_id" => "pi_1", "status" => "succeeded" }]
+      @last_request = {method: method, path: path, headers: headers, body: body, query_params: query_params}
+      [{"payment_intent_id" => "pi_1", "status" => "succeeded"}]
     end
   end
 
@@ -23,7 +23,7 @@ class ReconciliationApplicationQueriesSnapshotsGetTest < Minitest::Test
 
     assert_equal :get, @http_client.last_request[:method]
     assert_equal "/reports/transactions", @http_client.last_request[:path]
-    assert_equal({ view: "snapshot" }, @http_client.last_request[:query_params])
-    assert_equal [{ "payment_intent_id" => "pi_1", "status" => "succeeded" }], result
+    assert_equal({view: "snapshot"}, @http_client.last_request[:query_params])
+    assert_equal [{"payment_intent_id" => "pi_1", "status" => "succeeded"}], result
   end
 end

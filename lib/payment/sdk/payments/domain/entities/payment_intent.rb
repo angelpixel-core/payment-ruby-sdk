@@ -42,7 +42,7 @@ module Payment
             # @param created_at [String, Time, nil] optional creation timestamp
             # @param updated_at [String, Time, nil] optional update timestamp
             def initialize(id:, amount:, currency:, status:, customer_id:, merchant_id:,
-                           capture_method: "automatic", client_secret: nil, created_at: nil, updated_at: nil)
+              capture_method: "automatic", client_secret: nil, created_at: nil, updated_at: nil)
               @id = id
               @amount = amount
               @currency = currency

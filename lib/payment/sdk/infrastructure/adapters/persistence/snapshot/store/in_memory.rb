@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "payment/sdk/reconciliation/domain/ports/snapshot/store"
-require "thread"
 
 module Payment
   module SDK
@@ -40,8 +39,7 @@ module Payment
                 # @return [Hash, nil] shallow copy of the snapshot or `nil`
                 def find(id)
                   @mutex.synchronize do
-                    entry = @store[id]
-                    entry ? entry.dup : nil
+                    @store[id]&.dup
                   end
                 end
 

@@ -14,7 +14,7 @@ class WebhooksDomainPortsInboxStoreTest < Minitest::Test
 
   def test_save_raises_not_implemented
     assert_raises(NotImplementedError) do
-      @store.save({ delivery_id: "del_1" })
+      @store.save({delivery_id: "del_1"})
     end
   end
 

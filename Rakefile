@@ -10,6 +10,27 @@ Rake::TestTask.new(:test) do |t|
 end
 
 begin
+  require "standard/rake"
+rescue LoadError
+  desc "Run StandardRB linter (requires the standard gem)"
+  task :standard do
+    abort "standard is not installed. Run `bundle install` first."
+  end
+end
+
+begin
+  require "bundler/audit/task"
+  Bundler::Audit::Task.new
+  desc "Alias for bundle:audit"
+  task audit: "bundle:audit"
+rescue LoadError
+  desc "Run bundler-audit security check (requires the bundler-audit gem)"
+  task :audit do
+    abort "bundler-audit is not installed. Run `bundle install` first."
+  end
+end
+
+begin
   require "yard"
 
   YARD::Rake::YardocTask.new(:yard) do |t|
@@ -22,4 +43,4 @@ rescue LoadError
   end
 end
 
-task default: :test
+task default: %i[test standard]

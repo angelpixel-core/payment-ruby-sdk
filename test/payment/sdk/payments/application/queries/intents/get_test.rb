@@ -8,8 +8,8 @@ class PaymentsApplicationQueriesIntentsGetTest < Minitest::Test
     attr_reader :last_request
 
     def request(method:, path:, headers: {}, body: nil, query_params: {})
-      @last_request = { method: method, path: path, headers: headers, body: body, query_params: query_params }
-      { id: "pi_123", status: "requires_payment_method" }
+      @last_request = {method: method, path: path, headers: headers, body: body, query_params: query_params}
+      {id: "pi_123", status: "requires_payment_method"}
     end
   end
 
@@ -24,6 +24,6 @@ class PaymentsApplicationQueriesIntentsGetTest < Minitest::Test
     req = @http_client.last_request
     assert_equal :get, req[:method]
     assert_equal "/payment_intents/pi_123", req[:path]
-    assert_equal({ id: "pi_123", status: "requires_payment_method" }, result)
+    assert_equal({id: "pi_123", status: "requires_payment_method"}, result)
   end
 end

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "payment/sdk/webhooks/domain/ports/inbox/store"
-require "thread"
 
 module Payment
   module SDK
@@ -29,8 +28,7 @@ module Payment
                 # @return [Hash, nil] shallow copy of the stored entry or `nil`
                 def find_by_delivery_id(delivery_id)
                   @mutex.synchronize do
-                    entry = @store[delivery_id]
-                    entry ? entry.dup : nil
+                    @store[delivery_id]&.dup
                   end
                 end
 
@@ -73,7 +71,7 @@ module Payment
                 # @param failure_reason [String, nil] optional failure reason
                 # @return [Hash, nil] updated entry copy or `nil` if not found
                 def update_status(delivery_id:, status:, failure_reason: nil)
-                  attrs = { status: status }
+                  attrs = {status: status}
                   attrs[:failure_reason] = failure_reason if failure_reason
                   update(delivery_id, attrs)
                 end

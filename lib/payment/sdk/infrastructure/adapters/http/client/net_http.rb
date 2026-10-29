@@ -64,12 +64,12 @@ module Payment
 
               def build_request(method, uri, custom_headers, body)
                 req_class = case method.to_s.downcase.to_sym
-                            when :get then Net::HTTP::Get
-                            when :post then Net::HTTP::Post
-                            when :put then Net::HTTP::Put
-                            when :delete then Net::HTTP::Delete
-                            else raise ArgumentError, "Unsupported HTTP method: #{method}"
-                            end
+                when :get then Net::HTTP::Get
+                when :post then Net::HTTP::Post
+                when :put then Net::HTTP::Put
+                when :delete then Net::HTTP::Delete
+                else raise ArgumentError, "Unsupported HTTP method: #{method}"
+                end
 
                 req = req_class.new(uri)
 
@@ -110,7 +110,7 @@ module Payment
                   http.request(req)
                 rescue Net::OpenTimeout, Net::ReadTimeout
                   raise Payment::SDK::TimeoutError, "Request to #{uri} timed out"
-                rescue StandardError => e
+                rescue => e
                   raise Payment::SDK::NetworkError, "Network error during request to #{uri}: #{e.message}"
                 end
 

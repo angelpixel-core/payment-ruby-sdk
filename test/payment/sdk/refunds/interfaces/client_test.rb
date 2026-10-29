@@ -8,8 +8,8 @@ class RefundsInterfacesClientTest < Minitest::Test
     attr_reader :last_request
 
     def request(method:, path:, headers: {}, body: nil, query_params: {})
-      @last_request = { method: method, path: path, headers: headers, body: body, query_params: query_params }
-      { id: "re_123", status: "succeeded" }
+      @last_request = {method: method, path: path, headers: headers, body: body, query_params: query_params}
+      {id: "re_123", status: "succeeded"}
     end
   end
 

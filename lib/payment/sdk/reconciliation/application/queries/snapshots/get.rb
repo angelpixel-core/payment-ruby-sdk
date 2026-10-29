@@ -16,7 +16,7 @@ module Payment
               # @param end_date [String, nil] optional ISO date/time upper bound
               # @return [Array<Hash>, Hash] parsed transaction snapshot payload
               def call(start_date: nil, end_date: nil)
-                query_params = { view: "snapshot" }
+                query_params = {view: "snapshot"}
                 query_params[:start_date] = start_date if start_date
                 query_params[:end_date] = end_date if end_date
 

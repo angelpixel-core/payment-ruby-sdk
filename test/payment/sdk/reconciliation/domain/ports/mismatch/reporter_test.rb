@@ -14,7 +14,7 @@ class ReconciliationDomainPortsMismatchReporterTest < Minitest::Test
 
   def test_report_raises_not_implemented
     assert_raises(NotImplementedError) do
-      @reporter.report(snapshot: { status: :status_drift })
+      @reporter.report(snapshot: {status: :status_drift})
     end
   end
 end

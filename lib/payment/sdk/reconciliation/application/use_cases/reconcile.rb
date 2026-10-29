@@ -32,7 +32,7 @@ module Payment
 
               all_ids = (local_map.keys + remote_map.keys).uniq
 
-              results = all_ids.map do |id|
+              all_ids.map do |id|
                 local = local_map[id]
                 remote = remote_map[id]
 
@@ -53,8 +53,6 @@ module Payment
 
                 snapshot
               end
-
-              results
             end
 
             private

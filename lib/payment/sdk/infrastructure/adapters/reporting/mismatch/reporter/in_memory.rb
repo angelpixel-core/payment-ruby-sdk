@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "payment/sdk/reconciliation/domain/ports/mismatch/reporter"
-require "thread"
 
 module Payment
   module SDK

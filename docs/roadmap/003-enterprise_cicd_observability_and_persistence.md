@@ -86,15 +86,15 @@ graph TD
 ---
 
 ### Fase 2: Pipeline de CI/CD Completo (StandardRB y Multi-Ruby)
-- [ ] **2.1 Configuración de StandardRB**:
-  - [ ] Agregar `gem "standard"` en `Gemfile` (grupo `:development, :test`).
-  - [ ] Ejecutar `bundle exec standardrb` y formatear el código si fuera necesario (`--fix`).
-  - [ ] Agregar tarea de linter a la ejecución por defecto de Rake.
-- [ ] **2.2 Auditoría de Seguridad y Empaquetado**:
-  - [ ] Agregar `gem "bundler-audit"` para detección de CVEs.
-  - [ ] Crear tarea Rake `rake audit` y `rake build` para validar el empaquetado del `.gem`.
-- [ ] **2.3 Workflow de CI en GitHub Actions**:
-  - [ ] Crear `.github/workflows/ci.yml` con matriz de prueba:
+- [x] **2.1 Configuración de StandardRB**:
+  - [x] Agregar `gem "standard"` en `Gemfile` (grupo `:development, :test`).
+  - [x] Ejecutar `bundle exec standardrb` y formatear el código si fuera necesario (`--fix`).
+  - [x] Agregar tarea de linter a la ejecución por defecto de Rake.
+- [x] **2.2 Auditoría de Seguridad y Empaquetado**:
+  - [x] Agregar `gem "bundler-audit"` para detección de CVEs.
+  - [x] Crear tarea Rake `rake audit` y `rake build` para validar el empaquetado del `.gem`.
+- [x] **2.3 Workflow de CI en GitHub Actions**:
+  - [x] Crear `.github/workflows/ci.yml` con matriz de prueba:
     - Versiones de Ruby: `3.2`, `3.3`, `3.4`.
     - Pasos: Checkout, Setup Ruby, Bundle Install, `standardrb`, `bundle-audit`, `rake test`, y `gem build`.
 

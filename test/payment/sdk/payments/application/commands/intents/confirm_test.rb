@@ -8,8 +8,8 @@ class PaymentsApplicationCommandsIntentsConfirmTest < Minitest::Test
     attr_reader :last_request
 
     def request(method:, path:, headers: {}, body: nil, query_params: {})
-      @last_request = { method: method, path: path, headers: headers, body: body, query_params: query_params }
-      { id: "pi_123", status: "succeeded" }
+      @last_request = {method: method, path: path, headers: headers, body: body, query_params: query_params}
+      {id: "pi_123", status: "succeeded"}
     end
   end
 
@@ -32,6 +32,6 @@ class PaymentsApplicationCommandsIntentsConfirmTest < Minitest::Test
     assert_equal "ik_conf", req[:headers]["Idempotency-Key"]
     assert_equal "declined", req[:headers]["X-Sandbox-Scenario"]
     assert_equal "pm_tok_visa", req[:body][:payment_method_token]
-    assert_equal({ id: "pi_123", status: "succeeded" }, result)
+    assert_equal({id: "pi_123", status: "succeeded"}, result)
   end
 end

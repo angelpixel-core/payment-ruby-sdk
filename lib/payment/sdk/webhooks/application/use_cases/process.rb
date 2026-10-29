@@ -36,7 +36,7 @@ module Payment
 
               if existing_entry
                 if existing_entry[:payload] == raw_payload
-                  return { status: :duplicate, entry: existing_entry }
+                  return {status: :duplicate, entry: existing_entry}
                 else
                   raise ArgumentError, "delivery_id payload conflict: #{delivery_id} already exists with different payload"
                 end
@@ -72,12 +72,12 @@ module Payment
                 }
                 @projection.apply!(inbox_entry: projection_entry)
                 @inbox_store.update_status(delivery_id: delivery_id, status: :processed)
-              rescue StandardError => e
+              rescue => e
                 @inbox_store.update_status(delivery_id: delivery_id, status: :failed, failure_reason: e.message)
                 raise e
               end
 
-              { status: :processed, entry: @inbox_store.find_by_delivery_id(delivery_id) }
+              {status: :processed, entry: @inbox_store.find_by_delivery_id(delivery_id)}
             end
           end
         end

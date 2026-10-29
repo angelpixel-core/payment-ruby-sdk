@@ -8,8 +8,8 @@ class RefundsApplicationCommandsCreateTest < Minitest::Test
     attr_reader :last_request
 
     def request(method:, path:, headers: {}, body: nil, query_params: {})
-      @last_request = { method: method, path: path, headers: headers, body: body, query_params: query_params }
-      { id: "re_123", status: "succeeded" }
+      @last_request = {method: method, path: path, headers: headers, body: body, query_params: query_params}
+      {id: "re_123", status: "succeeded"}
     end
   end
 
@@ -33,6 +33,6 @@ class RefundsApplicationCommandsCreateTest < Minitest::Test
     assert_equal "ch_123", req[:body][:charge_id]
     assert_equal 500, req[:body][:amount]
     assert_equal "requested_by_customer", req[:body][:reason]
-    assert_equal({ id: "re_123", status: "succeeded" }, result)
+    assert_equal({id: "re_123", status: "succeeded"}, result)
   end
 end

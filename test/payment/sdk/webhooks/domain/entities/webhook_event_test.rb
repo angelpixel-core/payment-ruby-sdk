@@ -10,7 +10,7 @@ class WebhooksDomainEntitiesWebhookEventTest < Minitest::Test
       event_id: "evt_1",
       event_type: "payment_intent.succeeded",
       created_at: "2024-01-01T00:00:00Z",
-      data: { object: { id: "pi_123" } },
+      data: {object: {id: "pi_123"}},
       raw_payload: "{}"
     )
 
@@ -30,7 +30,7 @@ class WebhooksDomainEntitiesWebhookEventTest < Minitest::Test
       event_id: "evt_2",
       event_type: "charge.succeeded",
       created_at: nil,
-      data: { object: { id: "ch_123" } },
+      data: {object: {id: "ch_123"}},
       raw_payload: "{}"
     )
     assert_equal "ch_123", charge_event.charge_id
@@ -40,7 +40,7 @@ class WebhooksDomainEntitiesWebhookEventTest < Minitest::Test
       event_id: "evt_3",
       event_type: "refund.succeeded",
       created_at: nil,
-      data: { object: { id: "re_123" } },
+      data: {object: {id: "re_123"}},
       raw_payload: "{}"
     )
     assert_equal "re_123", refund_event.refund_id

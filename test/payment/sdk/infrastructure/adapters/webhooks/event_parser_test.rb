@@ -47,15 +47,15 @@ class InfrastructureAdaptersWebhooksEventParserTest < Minitest::Test
 
   def test_parse_missing_required_fields
     assert_raises(Payment::SDK::InvalidRequestError) do
-      Payment::SDK::Infrastructure::Adapters::Webhooks::EventParser.parse({ event_id: "evt_123", event_type: "type" })
+      Payment::SDK::Infrastructure::Adapters::Webhooks::EventParser.parse({event_id: "evt_123", event_type: "type"})
     end
 
     assert_raises(Payment::SDK::InvalidRequestError) do
-      Payment::SDK::Infrastructure::Adapters::Webhooks::EventParser.parse({ delivery_id: "del_123", event_type: "type" })
+      Payment::SDK::Infrastructure::Adapters::Webhooks::EventParser.parse({delivery_id: "del_123", event_type: "type"})
     end
 
     assert_raises(Payment::SDK::InvalidRequestError) do
-      Payment::SDK::Infrastructure::Adapters::Webhooks::EventParser.parse({ delivery_id: "del_123", event_id: "evt_123" })
+      Payment::SDK::Infrastructure::Adapters::Webhooks::EventParser.parse({delivery_id: "del_123", event_id: "evt_123"})
     end
   end
 

@@ -8,8 +8,8 @@ class PaymentsApplicationQueriesLifecyclesGetTest < Minitest::Test
     attr_reader :last_request
 
     def request(method:, path:, headers: {}, body: nil, query_params: {})
-      @last_request = { method: method, path: path, headers: headers, body: body, query_params: query_params }
-      { id: "pi_123", lifecycle: [] }
+      @last_request = {method: method, path: path, headers: headers, body: body, query_params: query_params}
+      {id: "pi_123", lifecycle: []}
     end
   end
 
@@ -24,6 +24,6 @@ class PaymentsApplicationQueriesLifecyclesGetTest < Minitest::Test
     req = @http_client.last_request
     assert_equal :get, req[:method]
     assert_equal "/payment_intents/pi_123/lifecycle", req[:path]
-    assert_equal({ id: "pi_123", lifecycle: [] }, result)
+    assert_equal({id: "pi_123", lifecycle: []}, result)
   end
 end

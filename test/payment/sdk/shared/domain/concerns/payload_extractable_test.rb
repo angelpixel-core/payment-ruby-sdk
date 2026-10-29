@@ -15,12 +15,12 @@ class SharedDomainConcernsPayloadExtractableTest < Minitest::Test
   end
 
   def test_extract_prefixed_id_from_nested_object_with_symbol_keys
-    host = DummyHost.new(object: { id: "pi_12345" })
+    host = DummyHost.new(object: {id: "pi_12345"})
     assert_equal "pi_12345", host.extract_prefixed_id("pi_", :payment_intent_id)
   end
 
   def test_extract_prefixed_id_from_nested_object_with_string_keys
-    host = DummyHost.new("object" => { "id" => "ch_999" })
+    host = DummyHost.new("object" => {"id" => "ch_999"})
     assert_equal "ch_999", host.extract_prefixed_id("ch_", :charge_id)
   end
 
@@ -38,7 +38,7 @@ class SharedDomainConcernsPayloadExtractableTest < Minitest::Test
   end
 
   def test_returns_nil_when_prefix_does_not_match
-    host = DummyHost.new(object: { id: "cus_999" })
+    host = DummyHost.new(object: {id: "cus_999"})
     assert_nil host.extract_prefixed_id("pi_", :payment_intent_id)
   end
 end

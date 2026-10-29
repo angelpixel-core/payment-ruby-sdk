@@ -8,8 +8,8 @@ class RefundsApplicationQueriesGetTest < Minitest::Test
     attr_reader :last_request
 
     def request(method:, path:, headers: {}, body: nil, query_params: {})
-      @last_request = { method: method, path: path, headers: headers, body: body, query_params: query_params }
-      { id: "re_123", amount: 500 }
+      @last_request = {method: method, path: path, headers: headers, body: body, query_params: query_params}
+      {id: "re_123", amount: 500}
     end
   end
 
@@ -24,6 +24,6 @@ class RefundsApplicationQueriesGetTest < Minitest::Test
     req = @http_client.last_request
     assert_equal :get, req[:method]
     assert_equal "/refunds/re_123", req[:path]
-    assert_equal({ id: "re_123", amount: 500 }, result)
+    assert_equal({id: "re_123", amount: 500}, result)
   end
 end

@@ -9,7 +9,7 @@ class InfrastructureAdaptersPersistenceSnapshotStoreInMemoryTest < Minitest::Tes
   end
 
   def test_save_and_find_snapshot
-    snapshot = { id: "run_1:pi_123", status: :match, amount: 1000 }
+    snapshot = {id: "run_1:pi_123", status: :match, amount: 1000}
     saved = @store.save(snapshot)
 
     assert_equal "run_1:pi_123", saved[:id]
@@ -22,8 +22,8 @@ class InfrastructureAdaptersPersistenceSnapshotStoreInMemoryTest < Minitest::Tes
   end
 
   def test_all_returns_all_snapshots
-    @store.save({ id: "snap_1", status: :match })
-    @store.save({ id: "snap_2", status: :status_drift })
+    @store.save({id: "snap_1", status: :match})
+    @store.save({id: "snap_2", status: :status_drift})
 
     all_entries = @store.all
     assert_equal 2, all_entries.size
@@ -31,15 +31,15 @@ class InfrastructureAdaptersPersistenceSnapshotStoreInMemoryTest < Minitest::Tes
   end
 
   def test_save_overwrites_existing_entry
-    @store.save({ id: "snap_1", status: :status_drift })
-    @store.save({ id: "snap_1", status: :match })
+    @store.save({id: "snap_1", status: :status_drift})
+    @store.save({id: "snap_1", status: :match})
 
     assert_equal 1, @store.all.size
     assert_equal :match, @store.find("snap_1")[:status]
   end
 
   def test_dup_isolation
-    original = { id: "snap_1", status: :match }
+    original = {id: "snap_1", status: :match}
     @store.save(original)
 
     original[:status] = :drift
@@ -47,7 +47,7 @@ class InfrastructureAdaptersPersistenceSnapshotStoreInMemoryTest < Minitest::Tes
   end
 
   def test_clear_empties_store
-    @store.save({ id: "snap_1", status: :match })
+    @store.save({id: "snap_1", status: :match})
     @store.clear!
 
     assert_empty @store.all
@@ -57,7 +57,7 @@ class InfrastructureAdaptersPersistenceSnapshotStoreInMemoryTest < Minitest::Tes
   def test_thread_safety
     threads = 10.times.map do |i|
       Thread.new do
-        @store.save({ id: "snap_#{i}", index: i })
+        @store.save({id: "snap_#{i}", index: i})
       end
     end
     threads.each(&:join)
