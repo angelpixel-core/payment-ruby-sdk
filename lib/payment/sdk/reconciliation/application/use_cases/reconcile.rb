@@ -58,12 +58,35 @@ module Payment
             private
 
             def fetch_remote_records
-              if @snapshot_client.respond_to?(:get_transaction_snapshot)
+              raw = if @snapshot_client.respond_to?(:get_transaction_snapshot)
                 @snapshot_client.get_transaction_snapshot
               elsif @snapshot_client.respond_to?(:get_snapshot)
                 @snapshot_client.get_snapshot
               else
                 raise ArgumentError, "snapshot_client must implement #get_transaction_snapshot or #get_snapshot"
+              end
+
+              if raw.is_a?(Hash) && (raw[:transactions_snapshot] || raw["transactions_snapshot"])
+                raw = raw[:transactions_snapshot] || raw["transactions_snapshot"]
+              end
+
+              if raw.is_a?(Hash)
+                items = raw[:transactions] || raw["transactions"] || raw[:records] || raw["records"]
+                if items.is_a?(Array)
+                  items.map do |line|
+                    if line.is_a?(Hash)
+                      line[:payment_intent] || line["payment_intent"] || line
+                    else
+                      line
+                    end
+                  end
+                else
+                  [raw]
+                end
+              elsif raw.is_a?(Array)
+                raw
+              else
+                []
               end
             end
 
@@ -81,7 +104,7 @@ module Payment
               return :missing_remote if remote.nil?
               return :missing_local if local.nil?
 
-              if val(local, :status) != val(remote, :status)
+              if val(local, :status).to_s != val(remote, :status).to_s
                 return :status_drift
               end
 
@@ -101,8 +124,8 @@ module Payment
                 return :refund_drift
               end
 
-              local_curr = val(local, :currency)
-              remote_curr = val(remote, :currency)
+              local_curr = val(local, :currency)&.to_s&.upcase
+              remote_curr = val(remote, :currency)&.to_s&.upcase
               if local_curr && remote_curr && local_curr != remote_curr
                 return :amount_drift
               end

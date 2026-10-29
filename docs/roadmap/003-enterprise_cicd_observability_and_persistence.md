@@ -127,14 +127,36 @@ graph TD
 
 ---
 
-### Fase 5: Documentación, Actualización del Árbol y Release
-- [ ] **5.1 Actualización de `TREE.txt`**:
-  - [ ] Regenerar `TREE.txt` con las nuevas rutas de adaptadores, workflows y concerns alineados a la columna 68.
-- [ ] **5.2 Actualización de `README.md` y `docs/audit/`**:
-  - [ ] Documentar en `README.md` la configuración del logger, el uso de Redis para webhooks y los workflows de CI/CD.
-  - [ ] Marcar en la auditoría técnica (`001-codebase_technical_audit.md`) la resolución de las tareas P1 y P2.
-- [ ] **5.3 Validación Integral**:
+### Fase 5: Suite de Integración E2E Enterprise (Testcontainers & Sandbox Container)
+- [x] **5.1 Dependencias y Helper de Testcontainers**:
+  - [x] Agregar `gem "testcontainers"` en `:development, :test` en `Gemfile`.
+  - [x] Crear `test/integration_helper.rb` para orquestar programáticamente el contenedor `angelszymczak/payment-sandbox` (asignación dinámica de puertos y wait-for-health contra `/v1/reports/transactions`).
+- [x] **5.2 Flujos E2E del Ciclo de Vida Completo**:
+  - [x] Test E2E 1: Creación y confirmación automática (`create_payment_intent` con `capture_method: "automatic"` -> `confirm_payment_intent` -> verificación de estado `succeeded`, inspección de `charge`, `payment_attempt` y `lifecycle`).
+  - [x] Test E2E 2: Creación manual y captura en dos pasos (`create_payment_intent` con `capture_method: "manual"` -> `confirm_payment_intent` -> `requires_capture` -> `capture_payment_intent` -> `succeeded`).
+  - [x] Test E2E 3: Reembolsos reales (`create_refund` sobre el charge capturado -> verificar `status: "succeeded"` -> `get_refund`).
+- [x] **5.3 Escenarios Exhaustivos (Sandbox Scenarios, Idempotencia y Concurrencia)**:
+  - [x] Test E2E 4: Simulación de fallo bancario con cabecera `X-Sandbox-Scenario: declined` -> verificar mapeo de error a `PaymentDeclinedError`.
+  - [x] Test E2E 5: Idempotencia estricta en el servidor real: re-envío de peticiones con el mismo `Idempotency-Key` sin duplicación de cobros ni efectos colaterales.
+  - [x] Test E2E 6: Concurrencia multi-hilo emitiendo transacciones en paralelo contra el sandbox real.
+- [x] **5.4 Conciliación Real E2E**:
+  - [x] Test E2E 7: Ejecución de `reconcile` contra el endpoint real `/v1/reports/transactions?view=snapshot`, validando match y reporte de discrepancias.
+- [x] **5.5 Orquestación y CI con Cache de Docker**:
+  - [x] Agregar tarea `rake test:integration` en `Rakefile`.
+  - [x] Agregar job dedicado `integration` en `.github/workflows/ci.yml` con `actions/cache@v4` para almacenar y restaurar el tarball de la imagen Docker de `angelszymczak/payment-sandbox`.
+
+---
+
+### Fase 6: Documentación, Actualización del Árbol y Release
+- [ ] **6.1 Actualización de `TREE.txt`**:
+  - [ ] Regenerar `TREE.txt` con todas las nuevas rutas (`test/integration/`, adaptadores, workflows) alineadas a la columna 68.
+- [ ] **6.2 Actualización de `README.md` y `docs/audit/`**:
+  - [ ] Documentar en `README.md` la suite de pruebas E2E con Testcontainers, adaptadores de Redis y ActiveRecord y observabilidad.
+  - [ ] Actualizar `001-codebase_technical_audit.md` reflejando la completitud de la pirámide de pruebas.
+- [ ] **6.3 Validación Integral y Commit de Release**:
   - [ ] Ejecutar `bundle exec rake test` (100% verde).
   - [ ] Ejecutar `bundle exec standardrb` (0 ofensas).
-  - [ ] Ejecutar `gem build payment-sdk.gemspec` (empaquetado exitoso).
-- [ ] **5.4 Commit y Tag Semántico de Release**.
+  - [ ] Ejecutar `bundle exec rake yard` (100.00% documentado, 0 warnings).
+  - [ ] Ejecutar `gem build payment-sdk.gemspec` (empaquetado limpio sin warnings).
+  - [ ] Ejecutar `bundle exec rake audit` (0 vulnerabilidades).
+- [ ] **6.4 Commit y Tag Semántico de Release**.

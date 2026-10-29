@@ -9,7 +9,9 @@ gem "rake", "~> 13.0"
 
 group :development, :test do
   gem "bundler-audit", require: false
+  gem "logger"
   gem "standard"
+  gem "testcontainers", require: false
   gem "webrick", "~> 1.8" # required by `yard server` on Ruby >= 3.0
   gem "yard", "~> 0.9"
 end

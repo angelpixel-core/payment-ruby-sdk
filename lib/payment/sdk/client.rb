@@ -183,8 +183,13 @@ module Payment
 
       def http_client
         @http_client ||= begin
+          url = @config.base_url || "https://api.payment.com"
+          if @config.api_version && !@config.api_version.empty? && !url.end_with?("/#{@config.api_version}")
+            url = "#{url.sub(%r{/$}, "")}/#{@config.api_version.sub(%r{^/}, "")}"
+          end
+
           adapter = Infrastructure::Adapters::Http::Client::NetHttp.new(
-            base_url: @config.base_url || "https://api.payment.com",
+            base_url: url,
             open_timeout: @config.open_timeout,
             read_timeout: @config.timeout,
             max_retries: @config.max_retries,

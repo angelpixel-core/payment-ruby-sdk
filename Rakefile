@@ -5,9 +5,20 @@ require "rake/testtask"
 
 Rake::TestTask.new(:test) do |t|
   t.libs << "lib" << "test"
-  t.test_files = FileList["test/**/*_test.rb"]
+  t.test_files = FileList["test/**/*_test.rb"].exclude("test/integration/**/*_test.rb")
   t.warning = true
 end
+
+namespace :test do
+  Rake::TestTask.new(:integration) do |t|
+    t.libs << "lib" << "test"
+    t.test_files = FileList["test/integration/**/*_test.rb"]
+    t.warning = true
+  end
+end
+
+desc "Run integration tests against Payment Sandbox container"
+task integration: "test:integration"
 
 begin
   require "standard/rake"
