@@ -44,4 +44,29 @@ class InfrastructureAdaptersPersistenceInboxStoreInMemoryTest < Minitest::Test
     assert_equal :failed, found[:status]
     assert_equal "err", found[:failure_reason]
   end
+
+  def test_ttl_expiration_evicts_old_entries
+    ttl_store = Payment::SDK::Infrastructure::Adapters::Persistence::Inbox::Store::InMemory.new(ttl_seconds: 0.05)
+    entry = {delivery_id: "del_ttl", raw_payload: "{}", status: :received}
+    ttl_store.save(entry)
+
+    assert_equal "del_ttl", ttl_store.find_by_delivery_id("del_ttl")[:delivery_id]
+
+    sleep 0.06
+
+    # Should be evicted after TTL
+    assert_nil ttl_store.find_by_delivery_id("del_ttl")
+
+    # Saving again with same delivery_id works without duplicate error because it was evicted
+    assert ttl_store.save(entry)
+  end
+
+  def test_clear_removes_all_entries
+    entry = {delivery_id: "del_clear", raw_payload: "{}", status: :received}
+    @store.save(entry)
+    refute_nil @store.find_by_delivery_id("del_clear")
+
+    @store.clear!
+    assert_nil @store.find_by_delivery_id("del_clear")
+  end
 end

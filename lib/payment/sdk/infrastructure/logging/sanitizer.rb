@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "uri"
+require "json"
 
 module Payment
   module SDK
@@ -78,6 +79,24 @@ module Payment
             uri.to_s
           rescue URI::InvalidURIError
             url.to_s
+          end
+
+          # Redacts sensitive keys from a raw string or JSON payload.
+          #
+          # @param raw_body [String, nil] raw response or request body
+          # @return [String, nil] sanitized string
+          def self.sanitize_raw_body(raw_body)
+            return nil if raw_body.nil?
+            return raw_body unless raw_body.is_a?(String)
+
+            parsed = JSON.parse(raw_body)
+            JSON.generate(sanitize_payload(parsed))
+          rescue JSON::ParserError
+            masked = raw_body.dup
+            SENSITIVE_KEYS.each do |key|
+              masked.gsub!(/(["']?#{Regexp.escape(key)}["']?\s*[:=]\s*["']?)([^"',\s]+)(["']?)/i, "\\1#{FILTERED}\\3")
+            end
+            masked
           end
 
           # Recursively redacts sensitive keys from a Hash or Array payload.

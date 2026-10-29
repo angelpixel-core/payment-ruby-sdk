@@ -95,3 +95,4 @@ Esta auditoría técnica da continuidad al informe [`001-codebase_technical_audi
 - **Documentación YARD:** 100.00% documentado, 0 warnings.
 - **Vulnerabilidades de Dependencias:** 0 vulnerabilidades vía `bundler-audit`.
 - **Compilación de Gema:** `gem build payment-sdk.gemspec` limpio y sin advertencias.
+

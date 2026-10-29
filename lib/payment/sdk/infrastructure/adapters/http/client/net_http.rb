@@ -25,18 +25,26 @@ module Payment
 
               # @return [Object, nil] optional logger instance
               attr_reader :logger
+              # @return [Payment::SDK::Infrastructure::Resilience::CircuitBreaker, nil] optional circuit breaker
+              attr_reader :circuit_breaker
+              # @return [Numeric] maximum delay in seconds to wait on 429 Retry-After
+              attr_reader :rate_limit_max_delay
 
               # @param base_url [String] base URL of the API (trailing slash is stripped)
               # @param open_timeout [Numeric] connection open timeout in seconds
               # @param read_timeout [Numeric] read timeout in seconds
               # @param max_retries [Integer] maximum number of retry attempts
               # @param logger [Object, nil] optional logger responding to `#info`, `#warn`, `#error`, `#debug`
-              def initialize(base_url:, open_timeout: 30, read_timeout: 80, max_retries: 2, logger: nil)
+              # @param circuit_breaker [Payment::SDK::Infrastructure::Resilience::CircuitBreaker, nil] circuit breaker instance
+              # @param rate_limit_max_delay [Numeric] maximum seconds to sleep when receiving HTTP 429 Retry-After
+              def initialize(base_url:, open_timeout: 30, read_timeout: 80, max_retries: 2, logger: nil, circuit_breaker: nil, rate_limit_max_delay: 10)
                 @base_url = base_url.sub(%r{/$}, "")
                 @open_timeout = open_timeout
                 @read_timeout = read_timeout
                 @max_retries = max_retries
                 @logger = logger
+                @circuit_breaker = circuit_breaker
+                @rate_limit_max_delay = rate_limit_max_delay
               end
 
               # Performs an HTTP request with automatic retries on transient errors.
@@ -102,8 +110,20 @@ module Payment
                 retries = 0
 
                 begin
-                  perform_request(uri, req)
+                  @circuit_breaker&.check!
+                  result = perform_request(uri, req)
+                  @circuit_breaker&.record_success!
+                  result
+                rescue Payment::SDK::RateLimitError => e
+                  if retries < @max_retries && e.retry_after_seconds && e.retry_after_seconds <= @rate_limit_max_delay
+                    retries += 1
+                    sleep(e.retry_after_seconds)
+                    retry
+                  else
+                    raise e
+                  end
                 rescue Payment::SDK::NetworkError, Payment::SDK::TimeoutError, Payment::SDK::UpstreamError => e
+                  @circuit_breaker&.record_failure!
                   if retries < @max_retries
                     retries += 1
                     sleep_for_backoff(retries)

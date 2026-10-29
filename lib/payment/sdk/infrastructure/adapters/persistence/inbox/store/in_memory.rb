@@ -16,9 +16,16 @@ module Payment
               class InMemory
                 include Payment::SDK::Webhooks::Domain::Ports::Inbox::Store
 
-                # Initializes an empty mutex-synchronized in-memory inbox store.
-                def initialize
+                # @return [Numeric, nil] time-to-live in seconds for stored entries
+                attr_reader :ttl_seconds
+
+                # Initializes an empty mutex-synchronized in-memory inbox store with optional TTL.
+                #
+                # @param ttl_seconds [Numeric, nil] optional expiration in seconds for stored entries
+                def initialize(ttl_seconds: nil)
                   @store = {}
+                  @created_at_store = {}
+                  @ttl_seconds = ttl_seconds
                   @mutex = Mutex.new
                 end
 
@@ -28,6 +35,7 @@ module Payment
                 # @return [Hash, nil] shallow copy of the stored entry or `nil`
                 def find_by_delivery_id(delivery_id)
                   @mutex.synchronize do
+                    evict_expired!
                     @store[delivery_id]&.dup
                   end
                 end
@@ -39,11 +47,14 @@ module Payment
                 # @raise [ArgumentError] when `entry[:delivery_id]` is already present
                 def save(entry)
                   @mutex.synchronize do
+                    evict_expired!
+
                     if @store.key?(entry[:delivery_id])
                       raise ArgumentError, "Duplicate delivery_id: #{entry[:delivery_id]}"
                     end
 
                     @store[entry[:delivery_id]] = entry.dup
+                    @created_at_store[entry[:delivery_id]] = monotonic_now
                     entry.dup
                   end
                 end
@@ -55,6 +66,8 @@ module Payment
                 # @return [Hash, nil] updated entry copy or `nil` if not found
                 def update(delivery_id, attributes)
                   @mutex.synchronize do
+                    evict_expired!
+
                     entry = @store[delivery_id]
                     return nil unless entry
 
@@ -77,9 +90,32 @@ module Payment
 
                 # Removes all entries from the store.
                 #
-                # @return [Hash]
+                # @return [void]
                 def clear!
-                  @mutex.synchronize { @store.clear }
+                  @mutex.synchronize do
+                    @store.clear
+                    @created_at_store.clear
+                  end
+                end
+
+                private
+
+                def evict_expired!
+                  return unless @ttl_seconds
+
+                  now = monotonic_now
+                  @created_at_store.delete_if do |delivery_id, timestamp|
+                    if (now - timestamp) >= @ttl_seconds
+                      @store.delete(delivery_id)
+                      true
+                    else
+                      false
+                    end
+                  end
+                end
+
+                def monotonic_now
+                  Process.clock_gettime(Process::CLOCK_MONOTONIC)
                 end
               end
             end

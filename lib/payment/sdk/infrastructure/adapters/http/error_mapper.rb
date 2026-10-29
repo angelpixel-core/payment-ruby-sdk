@@ -35,6 +35,19 @@ module Payment
               end
 
               error_class = determine_error_class(status_code, error_code)
+              retry_after_seconds = parse_retry_after(response)
+
+              if error_class == Payment::SDK::RateLimitError
+                raise error_class.new(
+                  message,
+                  status_code: status_code,
+                  code: error_code,
+                  details: details,
+                  request_id: request_id,
+                  raw_body: raw_body,
+                  retry_after_seconds: retry_after_seconds
+                )
+              end
 
               raise error_class.new(
                 message,
@@ -56,11 +69,15 @@ module Payment
                 Payment::SDK::DuplicateRequestError
               when "invalid_scenario", "payment_declined"
                 Payment::SDK::PaymentDeclinedError
+              when "rate_limit_exceeded"
+                Payment::SDK::RateLimitError
               when "internal_error", "panic"
                 Payment::SDK::UpstreamError
               else
                 if status_code >= 500
                   Payment::SDK::UpstreamError
+                elsif status_code == 429
+                  Payment::SDK::RateLimitError
                 elsif status_code == 404
                   Payment::SDK::PaymentNotFoundError
                 elsif status_code == 409
@@ -69,6 +86,25 @@ module Payment
                   Payment::SDK::InvalidRequestError
                 else
                   Payment::SDK::ApiError
+                end
+              end
+            end
+
+            private_class_method def self.parse_retry_after(response)
+              return nil unless response.respond_to?(:[])
+
+              raw_header = response["retry-after"] || response["Retry-After"]
+              return nil if raw_header.nil? || raw_header.to_s.strip.empty?
+
+              value = raw_header.to_s.strip
+              if /\A\d+\z/.match?(value)
+                value.to_i
+              else
+                begin
+                  require "time"
+                  [(Time.httpdate(value) - Time.now).ceil, 0].max
+                rescue ArgumentError
+                  nil
                 end
               end
             end

@@ -17,6 +17,14 @@ module Payment
       DEFAULT_LOG_LEVEL = :info
       # Supported logging levels.
       VALID_LOG_LEVELS = %i[debug info warn error fatal].freeze
+      # Default circuit breaker enabled flag.
+      DEFAULT_CIRCUIT_BREAKER_ENABLED = true
+      # Default consecutive failures to trip circuit breaker.
+      DEFAULT_CIRCUIT_BREAKER_FAILURE_THRESHOLD = 5
+      # Default cooldown in seconds before half-open probe.
+      DEFAULT_CIRCUIT_BREAKER_RESET_TIMEOUT = 30
+      # Default maximum delay in seconds to wait for HTTP 429 Retry-After.
+      DEFAULT_RATE_LIMIT_MAX_DELAY = 10
 
       # @return [String, nil] base URL of the payment platform API
       attr_accessor :base_url
@@ -36,6 +44,14 @@ module Payment
       attr_accessor :logger
       # @return [Symbol, String] minimum logging severity level (defaults to {DEFAULT_LOG_LEVEL})
       attr_accessor :log_level
+      # @return [Boolean] whether circuit breaker protection is active (defaults to {DEFAULT_CIRCUIT_BREAKER_ENABLED})
+      attr_accessor :circuit_breaker_enabled
+      # @return [Integer] consecutive failure count before tripping circuit (defaults to {DEFAULT_CIRCUIT_BREAKER_FAILURE_THRESHOLD})
+      attr_accessor :circuit_breaker_failure_threshold
+      # @return [Numeric] seconds to wait in open state before probing (defaults to {DEFAULT_CIRCUIT_BREAKER_RESET_TIMEOUT})
+      attr_accessor :circuit_breaker_reset_timeout
+      # @return [Numeric] maximum seconds to sleep on 429 Retry-After (defaults to {DEFAULT_RATE_LIMIT_MAX_DELAY})
+      attr_accessor :rate_limit_max_delay
 
       # Initializes a new configuration with default timeouts, retry count, and API version.
       def initialize
@@ -48,6 +64,10 @@ module Payment
         @max_retries = DEFAULT_MAX_RETRIES
         @logger = nil
         @log_level = DEFAULT_LOG_LEVEL
+        @circuit_breaker_enabled = DEFAULT_CIRCUIT_BREAKER_ENABLED
+        @circuit_breaker_failure_threshold = DEFAULT_CIRCUIT_BREAKER_FAILURE_THRESHOLD
+        @circuit_breaker_reset_timeout = DEFAULT_CIRCUIT_BREAKER_RESET_TIMEOUT
+        @rate_limit_max_delay = DEFAULT_RATE_LIMIT_MAX_DELAY
       end
 
       # Returns a shallow copy of the configuration.
@@ -65,9 +85,24 @@ module Payment
         validate_timeouts!
         validate_retries!
         validate_log_level!
+        validate_resilience!
       end
 
       private
+
+      def validate_resilience!
+        if @circuit_breaker_failure_threshold && (!@circuit_breaker_failure_threshold.is_a?(Integer) || @circuit_breaker_failure_threshold <= 0)
+          raise ArgumentError, "circuit_breaker_failure_threshold must be a positive integer"
+        end
+
+        if @circuit_breaker_reset_timeout && (!@circuit_breaker_reset_timeout.is_a?(Numeric) || @circuit_breaker_reset_timeout <= 0)
+          raise ArgumentError, "circuit_breaker_reset_timeout must be a positive numeric value"
+        end
+
+        if @rate_limit_max_delay && (!@rate_limit_max_delay.is_a?(Numeric) || @rate_limit_max_delay <= 0)
+          raise ArgumentError, "rate_limit_max_delay must be a positive numeric value"
+        end
+      end
 
       def validate_timeouts!
         if @timeout && (!@timeout.is_a?(Numeric) || @timeout <= 0)

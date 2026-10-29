@@ -76,24 +76,24 @@ flowchart TD
 ---
 
 ### Fase 2: Resiliencia de Runtime (Rate Limiting, Circuit Breaker, TTL y Zero-PII)
-- [ ] **2.1 Manejo Reactivo de Rate Limiting (HTTP 429)**:
-  - [ ] Crear excepción especializada `Payment::SDK::RateLimitError < ApiError` con lector `retry_after_seconds`.
-  - [ ] Extender `Infrastructure::Adapters::Http::ErrorMapper` para mapear HTTP 429 a `RateLimitError`.
-  - [ ] Implementar parseo de `Retry-After` (soporta enteros en segundos y fechas RFC 7231) en `NetHttp`.
-  - [ ] Añadir soporte de reintento automático respetando `retry_after_seconds` si es menor o igual a un umbral configurable (`rate_limit_max_delay`, default: 10s).
-- [ ] **2.2 Circuit Breaker Nativo Thread-Safe**:
-  - [ ] Crear `lib/payment/sdk/infrastructure/resilience/circuit_breaker.rb` con estados `:closed`, `:open`, `:half_open`.
-  - [ ] Exponer configuración en `Payment::SDK::Configuration`:
+- [x] **2.1 Manejo Reactivo de Rate Limiting (HTTP 429)**:
+  - [x] Crear excepción especializada `Payment::SDK::RateLimitError < ApiError` con lector `retry_after_seconds`.
+  - [x] Extender `Infrastructure::Adapters::Http::ErrorMapper` para mapear HTTP 429 a `RateLimitError`.
+  - [x] Implementar parseo de `Retry-After` (soporta enteros en segundos y fechas RFC 7231) en `NetHttp`.
+  - [x] Añadir soporte de reintento automático respetando `retry_after_seconds` si es menor o igual a un umbral configurable (`rate_limit_max_delay`, default: 10s).
+- [x] **2.2 Circuit Breaker Nativo Thread-Safe**:
+  - [x] Crear `lib/payment/sdk/infrastructure/resilience/circuit_breaker.rb` con estados `:closed`, `:open`, `:half_open`.
+  - [x] Exponer configuración en `Payment::SDK::Configuration`:
     - `circuit_breaker_enabled` (default: `true`)
     - `circuit_breaker_failure_threshold` (default: `5` fallos consecutivos de 5xx o timeout)
     - `circuit_breaker_reset_timeout` (default: `30` segundos)
-  - [ ] Crear excepción `Payment::SDK::CircuitBreakerOpenError < Error`.
-  - [ ] Integrar el Circuit Breaker en `NetHttp#perform_request` con sincronización de mutex.
-- [ ] **2.3 TTL y Desalojo de Memoria en `Inbox::Store::InMemory`**:
-  - [ ] Añadir soporte opcional de `ttl_seconds` con barrido automático ante consultas o escrituras para evitar DoS por saturación de RAM.
-- [ ] **2.4 Política Zero-PII en Excepciones y Logging**:
-  - [ ] Sanitizar campos sensibles en `ApiError#initialize` (`raw_body` y `details`) utilizando `Sanitizer`.
-  - [ ] Pruebas unitarias completas de Rate Limiting, Circuit Breaker, TTL y Zero-PII.
+  - [x] Crear excepción `Payment::SDK::CircuitBreakerOpenError < Error`.
+  - [x] Integrar el Circuit Breaker en `NetHttp#perform_request` con sincronización de mutex.
+- [x] **2.3 TTL y Desalojo de Memoria en `Inbox::Store::InMemory`**:
+  - [x] Añadir soporte opcional de `ttl_seconds` con barrido automático ante consultas o escrituras para evitar DoS por saturación de RAM.
+- [x] **2.4 Política Zero-PII en Excepciones y Logging**:
+  - [x] Sanitizar campos sensibles en `ApiError#initialize` (`raw_body` y `details`) utilizando `Sanitizer`.
+  - [x] Pruebas unitarias completas de Rate Limiting, Circuit Breaker, TTL y Zero-PII.
 
 ---
 

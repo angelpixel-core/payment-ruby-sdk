@@ -5,6 +5,7 @@ require "payment/sdk/infrastructure/adapters/crypto/signature/verifier/hmac_sha2
 require "payment/sdk/infrastructure/adapters/persistence/inbox/store/in_memory"
 require "payment/sdk/infrastructure/adapters/persistence/snapshot/store/in_memory"
 require "payment/sdk/infrastructure/adapters/reporting/mismatch/reporter/in_memory"
+require "payment/sdk/infrastructure/resilience/circuit_breaker"
 
 require "payment/sdk/payments/interfaces/client"
 require "payment/sdk/refunds/interfaces/client"
@@ -188,12 +189,21 @@ module Payment
             url = "#{url.sub(%r{/$}, "")}/#{@config.api_version.sub(%r{^/}, "")}"
           end
 
+          circuit_breaker = if @config.circuit_breaker_enabled
+            Infrastructure::Resilience::CircuitBreaker.new(
+              failure_threshold: @config.circuit_breaker_failure_threshold,
+              reset_timeout: @config.circuit_breaker_reset_timeout
+            )
+          end
+
           adapter = Infrastructure::Adapters::Http::Client::NetHttp.new(
             base_url: url,
             open_timeout: @config.open_timeout,
             read_timeout: @config.timeout,
             max_retries: @config.max_retries,
-            logger: @config.logger
+            logger: @config.logger,
+            circuit_breaker: circuit_breaker,
+            rate_limit_max_delay: @config.rate_limit_max_delay
           )
           AuthenticatedHttpClient.new(adapter, @config.api_key)
         end
