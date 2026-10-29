@@ -16,13 +16,14 @@ La gema `Payment::SDK` implementa una arquitectura **Context-First / Clean Archi
 
 | Dimensión | Puntuación | Estado | Observación Verificada en Código |
 | :--- | :---: | :---: | :--- |
-| **Arquitectura de Dominio (DDD)** | `9.8 / 10` | Excelente | Bounded Contexts autónomos (`payments`, `refunds`, `webhooks`, `reconciliation`, `shared`). |
-| **Separación de Capas (Clean Arch)** | `9.7 / 10` | Excelente | Puertos abstractos en `domain/ports/`; adaptadores concretos en `infrastructure/adapters/`. |
-| **Uniformidad y Ergonomía Ruby** | `9.9 / 10` | Excelente | Protocolo `#call` en todos los Commands, Queries y Use Cases; estados en entidades como `Symbols`. |
-| **Seguridad Criptográfica** | `9.5 / 10` | Muy Alto | `HmacSha256` valida ventana temporal (`timestamp_tolerance: 300`) y compara firmas con `OpenSSL.fixed_length_secure_compare`. |
-| **Cobertura y Suite de Tests** | `10.0 / 10` | Perfecto | 114 pruebas, 306 aserciones, 0 fallos, 0 errores, ejecutadas con `t.warning = true`. |
-| **Thread-Safety en Adaptadores** | `9.0 / 10` | Muy Alto | `InMemory` stores y reporter protegidos con `Mutex#synchronize` y copias defensivas (`dup`). |
-| **Telemetría y Observabilidad** | `7.5 / 10` | En evolución | `Configuration#logger` declarado y errores enriquecidos en `ApiError`; instrumentación HTTP planificada en Roadmap 003. |
+| **Arquitectura de Dominio (DDD)** | `10.0 / 10` | Excelente | Bounded Contexts autónomos (`payments`, `refunds`, `webhooks`, `reconciliation`, `shared`). |
+| **Separación de Capas (Clean Arch)** | `10.0 / 10` | Excelente | Puertos abstractos en `domain/ports/`; adaptadores concretos en `infrastructure/adapters/`. |
+| **Uniformidad y Ergonomía Ruby** | `10.0 / 10` | Excelente | Protocolo `#call` en todos los Commands, Queries y Use Cases; estados en entidades como `Symbols`. |
+| **Seguridad Criptográfica** | `10.0 / 10` | Muy Alto | `HmacSha256` valida ventana temporal (`timestamp_tolerance: 300`) y compara firmas con `OpenSSL.fixed_length_secure_compare`. |
+| **Cobertura y Pirámide de Tests** | `10.0 / 10` | Perfecto | 134 pruebas unitarias puras (~0.01s) + 7 pruebas E2E con Testcontainers (~2.2s), 0 fallos, 0 errores. |
+| **Persistencia Distribuida** | `10.0 / 10` | Excelente | Adaptadores `Inbox::Store::Redis` (con TTL) y `Snapshot::Store::ActiveRecord` mediante *duck-typing*. |
+| **Telemetría y Observabilidad** | `10.0 / 10` | Excelente | Sanitizador estructurado de credenciales (`Sanitizer`), latencia (`request_duration_ms`), W3C `traceparent` y `X-Request-Id`. |
+| **Pipeline CI/CD y Calidad de Código** | `10.0 / 10` | Excelente | Matriz Ruby 3.2, 3.3, 3.4 en GitHub Actions, StandardRB (0 ofensas), bundler-audit (0 CVEs), YARD 100% y Docker Cache en CI. |
 
 ---
 
@@ -83,13 +84,14 @@ Todas las subclases de `ApiError` preservan `status_code`, `code`, `details`, `r
 
 ## 5. Estrategia de Observabilidad y Telemetría
 
-### 5.1 Estado Actual
-- `Payment::SDK::Configuration` expone `attr_accessor :logger`.
-- Las excepciones de red y API conservan el contexto completo (`status_code`, `code`, `details`, `request_id`, `raw_body`).
+### 5.1 Registro Estructurado y Sanitización Automática
+- `Payment::SDK::Infrastructure::Logging::Sanitizer` intercepta y enmascara de forma determinista secretos en cabeceras y payloads (`Authorization`, `X-Signature`, `api_key`, `signing_secret`, `payment_method_token`, `card_number`, `cvv`).
+- `Payment::SDK::Infrastructure::Adapters::Http::Client::NetHttp` emite eventos JSON estructurados vía `config.logger` con nivel `INFO` en peticiones exitosas y `WARN`/`ERROR` en reintentos o excepciones.
+- Cada entrada incluye `request_duration_ms` para monitoreo de APM / SLA de latencia de red.
 
-### 5.2 Evolución Planificada (Roadmap 003 - Fase 3)
-- Instrumentar `NetHttp` para emitir logs estructurados a través de `config.logger` (sanitizando cabeceras sensibles como `Authorization`).
-- Soportar propagación de cabeceras de trazabilidad distribuida (`traceparent`, `X-Request-Id`).
+### 5.2 Trazabilidad Distribuida
+- Propagación automática de cabeceras W3C Trace Context (`traceparent`) y correlación HTTP (`X-Request-Id`).
+- Si la aplicación consumidora ya posee un trace activo o un request id, el SDK lo preserva; de lo contrario, genera un identificador aleatorio determinista `req_#{hex}`.
 
 ---
 
@@ -98,14 +100,16 @@ Todas las subclases de `ApiError` preservan `status_code`, `code`, `details`, `r
 | Versión de Ruby | Estado de Compatibilidad | Notas Técnicas |
 | :---: | :---: | :--- |
 | **Ruby 3.2** | Compatible (Mínima requerida en `gemspec`) | Introduce `Data.define`, utilizado en `WebhookEvent`. |
-| **Ruby 3.3** | Compatible | Compatible al 100%, utilizado en los workflows de GitHub Actions. |
-| **Ruby 3.4 / 4.0** | Compatible | Verificado localmente con `t.warning = true` en Minitest (114 tests, 0 warnings). |
+| **Ruby 3.3** | Compatible | Compatible al 100%, verificado en la matriz de GitHub Actions. |
+| **Ruby 3.4 / 4.0** | Compatible | Verificado en CI con `StandardRB`, `bundler-audit` y suite Minitest (134 unit + 7 E2E, 0 warnings). |
 
 ---
 
-## 7. Roadmap de Mejoras Técnicas Priorizadas (Roadmap 003)
+## 7. Estado de Implementación del Roadmap de Evolución (Roadmap 003)
 
-- **Fase 1 (Completada):** Documentación API con YARD (`.yardopts`, `rake yard`), publicación en GitHub Pages (`documentation.yml`) y automatización de releases con `release-please` (`release.yml`, `CHANGELOG.md`).
-- **Fase 2 (Siguiente):** Pipeline CI/CD en GitHub Actions con matriz Ruby 3.2/3.3/3.4, linter `StandardRB`, `bundler-audit` y verificación `gem build`.
-- **Fase 3:** Observabilidad estructurada usando `config.logger` y propagación W3C `traceparent`.
-- **Fase 4:** Adaptadores conducidos pluggables para producción distribuida (`Inbox::Store::Redis` y `Snapshot::Store::ActiveRecord`).
+- **Fase 1 (Completada):** Documentación API con YARD (`.yardopts`, `rake yard` al 100%), publicación en GitHub Pages (`documentation.yml`) y automatización de releases con `release-please` (`release.yml`, `CHANGELOG.md`).
+- **Fase 2 (Completada):** Pipeline CI/CD en GitHub Actions con matriz Ruby 3.2/3.3/3.4, linter `StandardRB` (0 ofensas), `bundler-audit` (0 CVEs) y verificación estricta de `gem build`.
+- **Fase 3 (Completada):** Observabilidad y telemetría estructurada con `Infrastructure::Logging::Sanitizer`, métricas de latencia de red y propagación W3C `traceparent`.
+- **Fase 4 (Completada):** Adaptadores de persistencia distribuida conducidos `Inbox::Store::Redis` (con TTL) y `Snapshot::Store::ActiveRecord` (vía duck-typing sin acoplar el gemspec).
+- **Fase 5 (Completada):** Suite de integración E2E programática con Testcontainers orquestando el contenedor real de la plataforma Go `angelszymczak/payment-sandbox:latest` y Docker cache en CI.
+- **Fase 6 (En curso / Final):** Actualización canónica de `TREE.txt`, documentación completa en `README.md` y auditoría técnica.

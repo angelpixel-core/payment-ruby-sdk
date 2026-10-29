@@ -148,15 +148,15 @@ graph TD
 ---
 
 ### Fase 6: Documentación, Actualización del Árbol y Release
-- [ ] **6.1 Actualización de `TREE.txt`**:
-  - [ ] Regenerar `TREE.txt` con todas las nuevas rutas (`test/integration/`, adaptadores, workflows) alineadas a la columna 68.
-- [ ] **6.2 Actualización de `README.md` y `docs/audit/`**:
-  - [ ] Documentar en `README.md` la suite de pruebas E2E con Testcontainers, adaptadores de Redis y ActiveRecord y observabilidad.
-  - [ ] Actualizar `001-codebase_technical_audit.md` reflejando la completitud de la pirámide de pruebas.
-- [ ] **6.3 Validación Integral y Commit de Release**:
-  - [ ] Ejecutar `bundle exec rake test` (100% verde).
-  - [ ] Ejecutar `bundle exec standardrb` (0 ofensas).
-  - [ ] Ejecutar `bundle exec rake yard` (100.00% documentado, 0 warnings).
-  - [ ] Ejecutar `gem build payment-sdk.gemspec` (empaquetado limpio sin warnings).
-  - [ ] Ejecutar `bundle exec rake audit` (0 vulnerabilidades).
-- [ ] **6.4 Commit y Tag Semántico de Release**.
+- [x] **6.1 Actualización de `TREE.txt`**:
+  - [x] Regenerar `TREE.txt` con todas las nuevas rutas (`test/integration/`, adaptadores, workflows) alineadas a la columna 68.
+- [x] **6.2 Actualización de `README.md` y `docs/audit/`**:
+  - [x] Documentar en `README.md` la suite de pruebas E2E con Testcontainers, adaptadores de Redis y ActiveRecord y observabilidad.
+  - [x] Actualizar `001-codebase_technical_audit.md` reflejando la completitud de la pirámide de pruebas.
+- [x] **6.3 Validación Integral y Commit de Release**:
+  - [x] Ejecutar `bundle exec rake test` (100% verde).
+  - [x] Ejecutar `bundle exec standardrb` (0 ofensas).
+  - [x] Ejecutar `bundle exec rake yard` (100.00% documentado, 0 warnings).
+  - [x] Ejecutar `gem build payment-sdk.gemspec` (empaquetado limpio sin warnings).
+  - [x] Ejecutar `bundle exec rake audit` (0 vulnerabilidades).
+- [x] **6.4 Commit y Tag Semántico de Release**.

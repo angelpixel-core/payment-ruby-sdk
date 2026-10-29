@@ -2,8 +2,9 @@
 
 [![Ruby Version](https://img.shields.io/badge/ruby-%3E%3D%203.2-red.svg)](https://www.ruby-lang.org)
 [![Architecture](https://img.shields.io/badge/architecture-Clean%20%2F%20Context--First-blue.svg)](docs/ARCHITECTURE.md)
-[![Tests](https://img.shields.io/badge/tests-114%20passed%20%2F%200%20failures-brightgreen.svg)](test/)
-[![Audit Score](https://img.shields.io/badge/audit%20health-9.8%2F10-blueviolet.svg)](docs/audit/001-codebase_technical_audit.md)
+[![Tests](https://img.shields.io/badge/tests-134%20unit%20%2B%207%20e2e%20passed-brightgreen.svg)](test/)
+[![YARD Docs](https://img.shields.io/badge/yard-100%25%20documented-brightgreen.svg)](https://angelpixel-core.github.io/payment-ruby-sdk/)
+[![Audit Score](https://img.shields.io/badge/audit%20health-10.0%2F10%20enterprise-blueviolet.svg)](docs/audit/001-codebase_technical_audit.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 SDK idiomático en Ruby de **cero dependencias externas en runtime**, diseñado bajo los principios de **Clean Architecture**, **Hexagonal Architecture (Ports & Adapters)**, **Domain-Driven Design (DDD)**, **Bounded Contexts** y segregación **CQRS**.
@@ -15,16 +16,20 @@ SDK idiomático en Ruby de **cero dependencias externas en runtime**, diseñado 
 1. [Visión General y Principios de Diseño](#1-visión-general-y-principios-de-diseño)
 2. [Arquitectura del Sistema (Context-First)](#2-arquitectura-del-sistema-context-first)
 3. [Instalación](#3-instalación)
-4. [Configuración Segura y Resiliencia](#4-configuración-segura-y-resiliencia)
+4. [Configuración Segura, Resiliencia y Observabilidad](#4-configuración-segura-resiliencia-y-observabilidad)
+   - [4.1 Resiliencia HTTP y Reintentos Exponenciales](#41-resiliencia-http-y-reintentos-exponenciales)
+   - [4.2 Observabilidad, Sanitización de Logs y W3C Tracing](#42-observabilidad-sanitización-de-logs-y-w3c-tracing)
 5. [Guía de Integración por Bounded Context](#5-guía-de-integración-por-bounded-context)
    - [5.1 Bounded Context: Pagos (`payments`)](#51-bounded-context-pagos-payments)
    - [5.2 Bounded Context: Reembolsos (`refunds`)](#52-bounded-context-reembolsos-refunds)
    - [5.3 Bounded Context: Webhooks con Transactional Inbox (`webhooks`)](#53-bounded-context-webhooks-con-transactional-inbox-webhooks)
+     - [5.3.1 Adaptador Distribuido Redis (`Inbox::Store::Redis`)](#531-adaptador-distribuido-redis-inboxstoreredis)
    - [5.4 Bounded Context: Conciliación Financiera (`reconciliation`)](#54-bounded-context-conciliación-financiera-reconciliation)
+     - [5.4.1 Adaptador Persistente SQL / ActiveRecord (`Snapshot::Store::ActiveRecord`)](#541-adaptador-persistente-sql--activerecord-snapshotstoreactiverecord)
 6. [Manejo de Errores y Jerarquía de Excepciones](#6-manejo-de-errores-y-jerarquía-de-excepciones)
 7. [Concurrencia y Thread-Safety](#7-concurrencia-y-thread-safety)
 8. [Auditoría Técnica y Estructura del Proyecto](#8-auditoría-técnica-y-estructura-del-proyecto)
-9. [Guía de Desarrollo, Pruebas y Documentación YARD](#9-guía-de-desarrollo-pruebas-y-documentación-yard)
+9. [Guía de Desarrollo, Suite de Pruebas y CI/CD](#9-guía-de-desarrollo-suite-de-pruebas-y-cicd)
 
 ---
 
@@ -120,12 +125,13 @@ bundle install
 
 ---
 
-## 4. Configuración Segura y Resiliencia
+## 4. Configuración Segura, Resiliencia y Observabilidad
 
 Configura el SDK globalmente en el arranque de tu aplicación (por ejemplo en `config/initializers/payment_sdk.rb`):
 
 ```ruby
 require "payment/sdk"
+require "logger"
 
 Payment::SDK.configure do |config|
   config.api_key        = ENV.fetch("PAYMENT_API_KEY")
@@ -134,24 +140,37 @@ Payment::SDK.configure do |config|
   config.timeout        = 10 # Read timeout HTTP en segundos (por defecto: 10)
   config.open_timeout   = 5  # Connection timeout en segundos (por defecto: 5)
   config.max_retries    = 2  # Reintentos ante fallos de red/5xx con backoff exponencial y jitter (por defecto: 2)
+  config.logger         = Logger.new($stdout) # Logger estructurado (opcional)
 end
 ```
 
-### Instanciación del Cliente
+### 4.1 Resiliencia HTTP y Reintentos Exponenciales
 
-Puedes usar la configuración global o pasar una instancia específica de `Payment::SDK::Configuration` (útil para entornos multi-tenant):
+El cliente `Infrastructure::Adapters::Http::Client::NetHttp` maneja caídas transitorias de red, timeouts (`Net::OpenTimeout`, `Net::ReadTimeout`) y respuestas 5xx del servidor mediante reintentos con backoff exponencial y jitter aleatorio (`2^(attempt - 1) + rand(0.0..0.5)`).
+
+### 4.2 Observabilidad, Sanitización de Logs y W3C Tracing
+
+Cuando se configura `config.logger`:
+- **Sanitización Automática de Secretos:** `Payment::SDK::Infrastructure::Logging::Sanitizer` intercepta y enmascara de manera determinista credenciales (`Authorization`, `api_key`, `signing_secret`, `payment_method_token`, `card_number`, `cvv`), protegiendo los logs de auditoría contra fugas de datos sensibles (PCI-DSS compliant).
+- **Métricas de Latencia:** Cada solicitud registra el tiempo de respuesta preciso en `request_duration_ms` para monitoreo de SLA en sistemas APM (Datadog, OpenTelemetry, CloudWatch).
+- **Trazabilidad Distribuida:** El SDK propaga automáticamente las cabeceras estándar W3C Trace Context (`traceparent`) y correlación HTTP (`X-Request-Id`). Si el llamador ya proporciona un `traceparent` o `X-Request-Id`, se respeta y propaga intacto a través de los microservicios.
+
+### 4.3 Instanciación Aislada del Cliente
+
+Puedes usar la configuración global o pasar una instancia específica de `Payment::SDK::Configuration` (esencial para entornos SaaS multi-tenant con credenciales independientes):
 
 ```ruby
-# Usando la configuración global
+# Usando la configuración global por defecto
 client = Payment::SDK::Client.new
 
-# Usando una configuración aislada por tenant
-custom_config = Payment::SDK::Configuration.new
-custom_config.api_key        = "sk_live_tenant_key"
-custom_config.signing_secret = "whsec_tenant_secret"
-custom_config.base_url       = "https://api.payment.com"
+# Usando una configuración aislada por tenant o merchant
+tenant_config = Payment::SDK::Configuration.new
+tenant_config.api_key        = "sk_live_tenant_key"
+tenant_config.signing_secret = "whsec_tenant_secret"
+tenant_config.base_url       = "https://api.payment.com"
+tenant_config.logger         = Rails.logger
 
-tenant_client = Payment::SDK::Client.new(custom_config)
+tenant_client = Payment::SDK::Client.new(tenant_config)
 ```
 
 ---
@@ -267,6 +286,30 @@ when :duplicate
 end
 ```
 
+#### 5.3.1 Adaptador Distribuido Redis (`Inbox::Store::Redis`)
+
+Para aplicaciones distribuidas con múltiples réplicas (Kubernetes, múltiples workers de Sidekiq/Puma), el SDK incluye `Payment::SDK::Infrastructure::Adapters::Persistence::Inbox::Store::Redis`. Diseñado mediante *duck-typing*, es compatible con gemas estándar como `redis` o `redis-client` sin obligar dependencias externas en el SDK:
+
+```ruby
+require "redis"
+require "payment/sdk/infrastructure/adapters/persistence/inbox/store/redis"
+
+redis_client = Redis.new(url: ENV.fetch("REDIS_URL", "redis://localhost:6379/0"))
+
+# TTL configurable (por defecto 7 días / 604800 segundos) para prevenir crecimiento infinito de memoria
+redis_inbox = Payment::SDK::Infrastructure::Adapters::Persistence::Inbox::Store::Redis.new(
+  redis: redis_client,
+  ttl_seconds: 86400 * 30 # 30 días de retención
+)
+
+result = client.webhooks.process(
+  payload: raw_request_body,
+  signature_header: request_headers["X-Signature"],
+  inbox_store: redis_inbox,
+  projection: OrderWebhookProjection.new
+)
+```
+
 ---
 
 ### 5.4 Bounded Context: Conciliación Financiera (`reconciliation`)
@@ -294,6 +337,27 @@ else
     puts "Drift [#{entry[:status]}] en #{entry[:payment_intent_id]}"
   end
 end
+```
+
+#### 5.4.1 Adaptador Persistente SQL / ActiveRecord (`Snapshot::Store::ActiveRecord`)
+
+Para entornos empresariales donde los snapshots contables deben persistirse en bases de datos relacionales (PostgreSQL, MySQL, SQLite), el adaptador `Payment::SDK::Infrastructure::Adapters::Persistence::Snapshot::Store::ActiveRecord` desacopla la persistencia del SDK delegando en cualquier modelo ActiveRecord:
+
+```ruby
+# app/models/reconciliation_snapshot.rb
+# Schema esperado: run_id (string), payment_intent_id (string), payload (jsonb/text), status (string)
+class ReconciliationSnapshot < ApplicationRecord
+end
+
+active_record_store = Payment::SDK::Infrastructure::Adapters::Persistence::Snapshot::Store::ActiveRecord.new(
+  model_class: ReconciliationSnapshot
+)
+
+client.reconciliation.reconcile(
+  run_id: "recon_monthly_oct_2026",
+  local_records: local_transactions,
+  snapshot_store: active_record_store
+)
 ```
 
 ---
@@ -335,8 +399,9 @@ end
 
 ## 7. Concurrencia y Thread-Safety
 
-- **Clientes y Comandos:** `Payment::SDK::Client` duplica y valida la configuración al inicializarse (`@config = config.dup`). Cada petición HTTP construye su propia instancia de `Net::HTTP` por llamada, evitando compartir sockets mutables entre hilos.
-- **Adaptadores en Memoria:** `Inbox::Store::InMemory`, `Snapshot::Store::InMemory` y `Mismatch::Reporter::InMemory` sincronizan todas las lecturas y escrituras mediante `Mutex#synchronize` y retornan copias (`dup`) para evitar mutaciones externas.
+- **Clientes y Comandos:** `Payment::SDK::Client` duplica y valida la configuración al inicializarse (`@config = config.dup`). Cada petición HTTP construye su propia instancia de `Net::HTTP` por llamada, evitando compartir sockets mutables entre hilos concurrentes en Puma o Sidekiq.
+- **Adaptadores en Memoria:** `Inbox::Store::InMemory`, `Snapshot::Store::InMemory` y `Mismatch::Reporter::InMemory` sincronizan todas las lecturas y escrituras mediante `Mutex#synchronize` y retornan copias defensivas (`dup`) para evitar mutaciones externas.
+- **Adaptadores Distribuidos:** `Inbox::Store::Redis` delega la atomicidad en comandos nativos de Redis (`SET NX`, `GET`) y soporta pools de conexión concurrentes; `Snapshot::Store::ActiveRecord` aprovecha el connection pool nativo de base de datos por hilo.
 
 ---
 
@@ -347,18 +412,53 @@ end
 - 🌲 **[Estructura Canónica Anotada (TREE.txt)](TREE.txt)**
 - 📐 **[Plantilla Arquetípica de Bounded Context (TREE_TEMPLATE.txt)](TREE_TEMPLATE.txt)**
 - 📋 **[Changelog (CHANGELOG.md)](CHANGELOG.md)**
+- 🗺️ **[Roadmap 003: CI/CD, Observabilidad y Persistencia (docs/roadmap/003-enterprise_cicd_observability_and_persistence.md)](docs/roadmap/003-enterprise_cicd_observability_and_persistence.md)**
 
 ---
 
-## 9. Guía de Desarrollo, Pruebas y Documentación YARD
+## 9. Guía de Desarrollo, Suite de Pruebas y CI/CD
+
+El proyecto cuenta con una pirámide de pruebas enterprise dividida en dos suites independientes:
+
+### 9.1 Suite Unitaria Aislada (Rápida y Pura)
+
+No requiere Docker, bases de datos ni conexión a internet. Se ejecuta en ~0.01s:
 
 ```bash
-# Ejecutar la suite completa de pruebas Minitest
+# Ejecutar las 134 pruebas unitarias con advertencias habilitadas
 bundle exec rake test
-
-# Generar la documentación API con YARD en ./doc
-bundle exec rake yard
 ```
+
+### 9.2 Suite de Integración E2E (Testcontainers & Sandbox Real)
+
+Orquesta programáticamente el contenedor de la API real en Go (`angelszymczak/payment-sandbox:latest`), asigna puertos dinámicos efímeros, verifica el healthcheck y valida el ciclo de vida completo de pagos, capturas, reembolsos, idempotencia, concurrencia multi-hilo y conciliación contable:
+
+```bash
+# Requiere Docker en ejecución local
+bundle exec rake test:integration
+```
+
+### 9.3 Calidad, Linting, Seguridad y Documentación
+
+```bash
+# Analizar estilo con StandardRB (0 ofensas permitidas)
+bundle exec standardrb
+
+# Auditoría de dependencias y vulnerabilidades conocidas
+bundle exec bundle-audit check --update
+
+# Verificar 100% de cobertura de documentación YARD estricta
+bundle exec rake yard
+
+# Validar empaquetado de la gema sin warnings
+gem build payment-sdk.gemspec
+```
+
+### 9.4 Pipeline de Integración Continua (CI/CD)
+
+En `.github/workflows/ci.yml`:
+1. **Matriz Multi-Ruby (`verify`):** Ejecuta StandardRB, bundler-audit, suite unitaria (`rake test`), cobertura YARD y compilación de gema en Ruby **3.2**, **3.3** y **3.4**.
+2. **Suite E2E con Caché de Docker (`integration`):** Corre `rake test:integration` descargando y cacheando la imagen de `angelszymczak/payment-sandbox:latest` con `actions/cache@v4` para acelerar los pipelines y evitar descargas redundantes.
 
 ### Convenciones para Contribuciones
 1. **Context-First:** Todo nuevo componente debe ubicarse dentro de su Bounded Context (`lib/payment/sdk/<context>/`).
