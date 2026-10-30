@@ -77,3 +77,4 @@ Los líderes de la comunidad seguirán estas Pautas de Impacto Comunitario para 
 ## Atribución
 
 Este Código de Conducta está adaptado del [Contributor Covenant](https://www.contributor-covenant.org), versión 2.1, disponible en https://www.contributor-covenant.org/version/2/1/code_of_conduct.html.
+

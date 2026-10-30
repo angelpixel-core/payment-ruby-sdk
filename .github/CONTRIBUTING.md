@@ -100,3 +100,4 @@ gem build payment-sdk.gemspec && rm -f payment-sdk-*.gem
 
 - Para reportar un fallo que **no sea de seguridad**, abre un issue utilizando la plantilla correspondiente en [Issues](../../issues).
 - Para reportar **vulnerabilidades de seguridad**, sigue nuestra [Política de Seguridad (`SECURITY.md`)](SECURITY.md) y envía un correo cifrado a `angel.szymczak+sec@hotmail.com`.
+

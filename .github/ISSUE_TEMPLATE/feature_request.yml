@@ -47,3 +47,4 @@ body:
       description: ¿Existen enfoques alternativos o workarounds temporales que hayas evaluado?
     validations:
       required: false
+

@@ -45,3 +45,4 @@ Marca cada ítem tras verificarlo localmente antes de solicitar revisión:
 ## ¿Introduce Cambios que Rompen Compatibilidad (Breaking Changes)?
 - [ ] No
 - [ ] Sí (describir la ruta de migración requerida para los merchants):
+

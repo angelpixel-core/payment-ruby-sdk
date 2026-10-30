@@ -62,3 +62,4 @@ body:
       description: Información sobre tu entorno (framework, sistema operativo, Puma, Sidekiq, etc.).
     validations:
       required: false
+
