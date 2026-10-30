@@ -18,12 +18,12 @@
 ---
 
 ### Fase 2: Guía de Contribución y Código de Conducta (`CONTRIBUTING.md` y `CODE_OF_CONDUCT.md`)
-- [ ] **2.1 Código de Conducta de la Comunidad**:
-  - [ ] Adoptar Contributor Covenant v2.1 en `.github/CODE_OF_CONDUCT.md` con punto de contacto en `angel.szymczak+compliance@hotmail.com`.
-- [ ] **2.2 Guía Formal de Contribución (`CONTRIBUTING.md`)**:
-  - [ ] Documentar la arquitectura Context-First y principios de Clean Architecture.
-  - [ ] Especificar estándares obligatorios: StandardRB (0 ofensas), YARD (100.00% estricto con `--fail-on-warning`), pirámide de pruebas (unitarias en 0.3s y E2E en Docker).
-  - [ ] Flujo de trabajo con ramas, commits semánticos (`feat`, `fix`, `docs`, `refactor`, `ci`) y proceso de Pull Request.
+- [x] **2.1 Código de Conducta de la Comunidad**:
+  - [x] Adoptar Contributor Covenant v2.1 en `.github/CODE_OF_CONDUCT.md` con punto de contacto en `angel.szymczak+compliance@hotmail.com`.
+- [x] **2.2 Guía Formal de Contribución (`CONTRIBUTING.md`)**:
+  - [x] Documentar la arquitectura Context-First y principios de Clean Architecture.
+  - [x] Especificar estándares obligatorios: StandardRB (0 ofensas), YARD (100.00% estricto con `--fail-on-warning`), pirámide de pruebas (unitarias en 0.3s y E2E en Docker).
+  - [x] Flujo de trabajo con ramas, commits semánticos (`feat`, `fix`, `docs`, `refactor`, `ci`) y proceso de Pull Request.
 
 ---
 
