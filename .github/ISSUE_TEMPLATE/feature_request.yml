@@ -1,0 +1,49 @@
+name: 💡 Solicitud de Funcionalidad (Feature Request)
+description: Sugiere una nueva funcionalidad, endpoint o adaptador para Payment::SDK.
+title: "[Feature]: "
+labels: ["enhancement", "feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Apreciamos tus ideas para enriquecer y robustecer el ecosistema de `Payment::SDK`.
+  - type: textarea
+    id: problem
+    attributes:
+      label: ¿Qué problema o caso de uso resuelve esta propuesta?
+      description: Explica qué necesidad comercial o técnica no está cubierta actualmente.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solución Propuesta
+      description: Describe cómo imaginas la API o la implementación técnica en el SDK.
+      placeholder: |
+        ```ruby
+        # Ejemplo de uso deseado
+        client.payments.intents.confirm(...)
+        ```
+    validations:
+      required: true
+  - type: dropdown
+    id: bounded_context
+    attributes:
+      label: Bounded Context Afectado
+      description: ¿A qué contexto del dominio pertenece esta funcionalidad?
+      options:
+        - "payments (Intents, Charges, Attempts)"
+        - "refunds (Emisión y consulta de reembolsos)"
+        - "webhooks (Ingestión y Transactional Inbox)"
+        - "reconciliation (Conciliación contable y snapshots)"
+        - "shared (Money, Currency, IdempotencyKey)"
+        - "infrastructure (HTTP, Resiliencia, Logging, Persistencia)"
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas Consideradas
+      description: ¿Existen enfoques alternativos o workarounds temporales que hayas evaluado?
+    validations:
+      required: false

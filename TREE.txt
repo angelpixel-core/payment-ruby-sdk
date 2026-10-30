@@ -1,5 +1,15 @@
 .                                                                   # Directorio raíz del proyecto Payment::SDK
-├── .github                                                         # Configuraciones de automatización y flujos de trabajo de GitHub
+├── .github                                                         # Configuraciones de automatización, gobernanza y flujos de trabajo
+│   ├── CODE_OF_CONDUCT.md                                          # Código de conducta para contribuidores (Contributor Covenant v2.1)
+│   ├── CONTRIBUTING.md                                             # Guía formal de contribución, arquitectura y estándares de calidad
+│   ├── dependabot.yml                                              # Automatización semanal de actualizaciones de dependencias y Actions
+│   ├── ISSUE_TEMPLATE                                              # Formularios estructurados para reporte de bugs, features y soporte
+│   │   ├── bug_report.yml                                          # Formulario estructurado para reporte reproducible de errores
+│   │   ├── config.yml                                              # Configuración de soporte técnico y enlaces oficiales de asistencia
+│   │   ├── feature_request.yml                                     # Formulario para solicitudes y propuestas de nuevas funcionalidades
+│   │   └── security_advisory.yml                                   # Redirección obligatoria hacia canales privados de seguridad
+│   ├── PULL_REQUEST_TEMPLATE.md                                    # Plantilla interactiva y checklist de verificación para Pull Requests
+│   ├── SECURITY.md                                                 # Política de divulgación responsable, SLA y perímetro PCI-DSS SAQ-A
 │   └── workflows                                                   # Pipelines de integración y entrega continua en GitHub Actions
 │       ├── ci.yml                                                  # Pipeline de CI multi-ruby, StandardRB, bundler-audit, YARD y suite E2E
 │       ├── codeql.yml                                              # Pipeline de análisis semántico SAST y exportación SARIF con GitHub CodeQL
@@ -22,7 +32,9 @@
 │       ├── 001-architecture_normalization_and_bounded_contexts.md  # Roadmap inicial de diseño e introducción de Bounded Contexts
 │       ├── 002-context_first_normalization_and_audit.md            # Roadmap estratégico de reorganización Context-First y release
 │       ├── 003-enterprise_cicd_observability_and_persistence.md    # Roadmap de CI/CD enterprise, observabilidad, persistencia distribuida y E2E
-│       └── 004-security_resilience_and_devsecops.md                # Roadmap de hardening de seguridad, resiliencia de runtime y DevSecOps
+│       ├── 004-security_resilience_and_devsecops.md                # Roadmap de hardening de seguridad, resiliencia de runtime y DevSecOps
+│       ├── 005-enterprise_repository_governance_and_compliance.md  # Roadmap de gobernanza enterprise, estándares de comunidad y compliance
+│       └── 006-real_world_financial_protocols_and_compliance.md    # Roadmap de protocolos financieros avanzados (3DS2, webhooks, billeteras)
 ├── Gemfile                                                         # Definición de dependencias y versiones de gemas para Bundler
 ├── Gemfile.lock                                                    # Árbol de resolución determinista de dependencias
 ├── lib                                                             # Directorio principal de código fuente de la gema

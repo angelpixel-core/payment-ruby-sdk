@@ -1,6 +1,6 @@
 # Roadmap 005: Gobernanza Enterprise de Repositorio en GitHub y Compliance
 
-**Estado:** EN PROGRESO  
+**Estado:** COMPLETADO  
 **Fecha de Inicio:** Octubre 2026  
 **Objetivo:** Establecer la infraestructura formal de comunidad, políticas de divulgación responsable de seguridad, estándares de contribución y automatización de dependencias para operar como un SDK open-source de grado financiero y bancario.
 
@@ -28,26 +28,26 @@
 ---
 
 ### Fase 3: Plantillas Estandarizadas de GitHub (`.github/PULL_REQUEST_TEMPLATE.md` e `.github/ISSUE_TEMPLATE/*`)
-- [ ] **3.1 Plantilla de Pull Request (`.github/PULL_REQUEST_TEMPLATE.md`)**:
-  - [ ] Checklist interactivo de verificación: Clean Architecture, tests unitarios, tests E2E, StandardRB, YARD docs y Zero-PII compliance.
-- [ ] **3.2 Formularios Estructurados de Issues (GitHub Issue Forms YAML)**:
-  - [ ] `.github/ISSUE_TEMPLATE/bug_report.yml`: Reporte de errores con selector de versión de Ruby, SDK y logs sanitizados.
-  - [ ] `.github/ISSUE_TEMPLATE/feature_request.yml`: Propuestas de nuevas capacidades de dominio o adaptadores.
-  - [ ] `.github/ISSUE_TEMPLATE/security_advisory.yml`: Redirección obligatoria hacia `SECURITY.md` para evitar divulgación pública de vulnerabilidades.
-  - [ ] `.github/ISSUE_TEMPLATE/config.yml`: Configuración de soporte oficial (`angel.szymczak+support@hotmail.com`), enlaces a documentación y portal de merchants.
+- [x] **3.1 Plantilla de Pull Request (`.github/PULL_REQUEST_TEMPLATE.md`)**:
+  - [x] Checklist interactivo de verificación: Clean Architecture, tests unitarios, tests E2E, StandardRB, YARD docs y Zero-PII compliance.
+- [x] **3.2 Formularios Estructurados de Issues (GitHub Issue Forms YAML)**:
+  - [x] `.github/ISSUE_TEMPLATE/bug_report.yml`: Reporte de errores con selector de versión de Ruby, SDK y logs sanitizados.
+  - [x] `.github/ISSUE_TEMPLATE/feature_request.yml`: Propuestas de nuevas capacidades de dominio o adaptadores.
+  - [x] `.github/ISSUE_TEMPLATE/security_advisory.yml`: Redirección obligatoria hacia `SECURITY.md` para evitar divulgación pública de vulnerabilidades.
+  - [x] `.github/ISSUE_TEMPLATE/config.yml`: Configuración de soporte oficial (`angel.szymczak+support@hotmail.com`), enlaces a documentación y portal de merchants.
 
 ---
 
 ### Fase 4: Automatización de Seguridad de Cadena de Suministro (`.github/dependabot.yml`)
-- [ ] **4.1 Configuración de Dependabot**:
-  - [ ] Actualizaciones automáticas semanales para ecosistema Bundler (`/`).
-  - [ ] Actualizaciones automáticas semanales para ecosistema GitHub Actions (`/`).
-  - [ ] Agrupación de dependencias de desarrollo para evitar saturación de PRs.
+- [x] **4.1 Configuración de Dependabot**:
+  - [x] Actualizaciones automáticas semanales para ecosistema Bundler (`/`).
+  - [x] Actualizaciones automáticas semanales para ecosistema GitHub Actions (`/`).
+  - [x] Agrupación de dependencias de desarrollo para evitar saturación de PRs.
 
 ---
 
 ### Fase 5: Documentación Canónica y Actualización de `TREE.txt`
-- [ ] **5.1 Actualización del Árbol Canónico**:
-  - [ ] Registrar todos los nuevos archivos de gobernanza en `TREE.txt` con alineación estricta en la columna 69 (`line[68] == '#'`).
-- [ ] **5.2 Verificación Integral**:
-  - [ ] Ejecutar `standardrb`, `rake test`, `rake yard` y verificar que el repositorio mantiene el estándar de 0 errores y 100% de documentación.
+- [x] **5.1 Actualización del Árbol Canónico**:
+  - [x] Registrar todos los nuevos archivos de gobernanza en `TREE.txt` con alineación estricta en la columna 69 (`line[68] == '#'`).
+- [x] **5.2 Verificación Integral**:
+  - [x] Ejecutar `standardrb`, `rake test`, `rake yard` y verificar que el repositorio mantiene el estándar de 0 errores y 100% de documentación.

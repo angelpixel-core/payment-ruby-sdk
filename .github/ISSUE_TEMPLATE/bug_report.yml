@@ -1,0 +1,64 @@
+name: 🐛 Reporte de Error (Bug Report)
+description: Reporta un error reproducible o comportamiento inesperado en Payment::SDK.
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por tomarte el tiempo de reportar este problema.
+        **Importante:** Si has encontrado una vulnerabilidad de seguridad o fuga de datos, **NO uses este formulario**. Sigue nuestra [Política de Seguridad](https://github.com/angelpixel-core/payment-ruby-sdk/blob/main/.github/SECURITY.md) para reporte privado.
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción del Problema
+      description: Explica de forma clara y precisa qué ocurrió y cuál era el comportamiento esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para Reproducir
+      description: Código mínimo ejecutable en Ruby para reproducir el comportamiento.
+      placeholder: |
+        ```ruby
+        client = Payment::SDK::Client.new
+        client.payments.intents.create(...)
+        ```
+    validations:
+      required: true
+  - type: dropdown
+    id: ruby_version
+    attributes:
+      label: Versión de Ruby
+      description: ¿Qué versión de Ruby estás utilizando?
+      options:
+        - "3.4.x"
+        - "3.3.x"
+        - "3.2.x"
+        - "Otra (especificar en contexto adicional)"
+    validations:
+      required: true
+  - type: input
+    id: sdk_version
+    attributes:
+      label: Versión del SDK
+      description: Versión de `payment-sdk` instalada (ej. `0.1.0`).
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs o Stacktrace (Sanitizados)
+      description: Pega aquí la traza de error. Asegúrate de que **no contenga claves de API reales ni datos de tarjeta**.
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto Adicional
+      description: Información sobre tu entorno (framework, sistema operativo, Puma, Sidekiq, etc.).
+    validations:
+      required: false

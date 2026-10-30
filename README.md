@@ -450,6 +450,8 @@ end
 - 📋 **[Changelog (CHANGELOG.md)](CHANGELOG.md)**
 - 🗺️ **[Roadmap 003: CI/CD, Observabilidad y Persistencia (docs/roadmap/003-enterprise_cicd_observability_and_persistence.md)](docs/roadmap/003-enterprise_cicd_observability_and_persistence.md)**
 - 🗺️ **[Roadmap 004: Hardening de Seguridad, Resiliencia y DevSecOps (docs/roadmap/004-security_resilience_and_devsecops.md)](docs/roadmap/004-security_resilience_and_devsecops.md)**
+- 🗺️ **[Roadmap 005: Gobernanza Enterprise de Repositorio en GitHub y Compliance (docs/roadmap/005-enterprise_repository_governance_and_compliance.md)](docs/roadmap/005-enterprise_repository_governance_and_compliance.md)**
+- 🗺️ **[Roadmap 006: Protocolos Financieros Avanzados de la Industria de Pagos (docs/roadmap/006-real_world_financial_protocols_and_compliance.md)](docs/roadmap/006-real_world_financial_protocols_and_compliance.md)**
 
 ---
 

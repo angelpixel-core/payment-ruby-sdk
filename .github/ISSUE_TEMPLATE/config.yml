@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentación Canónica y Arquitectura
+    url: https://github.com/angelpixel-core/payment-ruby-sdk/blob/main/docs/ARCHITECTURE.md
+    about: Conoce los principios de diseño Clean Architecture, Context-First y patrones de resiliencia del SDK.
+  - name: 🛟 Soporte Técnico para Merchants
+    url: mailto:angel.szymczak+support@hotmail.com
+    about: Contacto directo con el equipo de soporte técnico y operaciones de AngelPixel.
+  - name: 🛡️ Divulgación Responsable de Seguridad
+    url: https://github.com/angelpixel-core/payment-ruby-sdk/blob/main/.github/SECURITY.md
+    about: Política de reporte seguro y acuerdos SLA de resolución de vulnerabilidades.
