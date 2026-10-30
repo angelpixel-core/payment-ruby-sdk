@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Ruby ${{ matrix.ruby-version }}
         uses: ruby/setup-ruby@v1
@@ -57,7 +57,7 @@ jobs:
     needs: [verify]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Ruby 3.4
         uses: ruby/setup-ruby@v1
@@ -67,7 +67,7 @@ jobs:
 
       - name: Restore Docker image cache
         id: docker-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: /tmp/docker-sandbox-cache.tar.gz
           key: docker-payment-sandbox-${{ runner.os }}-v1
