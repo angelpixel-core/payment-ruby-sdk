@@ -57,3 +57,4 @@
 - [ ] **5.2 Actualización del Árbol Canónico `TREE.txt` y 100% YARD**:
   - [ ] Documentar todas las nuevas clases, tipos y métodos con YARD estricto.
   - [ ] Alinear `TREE.txt` en la columna 69 y ejecutar suite completa (`rake test`, `rake test:integration`, `standardrb`, `bundle-audit`, `brakeman`).
+

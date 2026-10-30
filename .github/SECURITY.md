@@ -1,6 +1,6 @@
 # Política de Seguridad y Divulgación Responsable (Security Policy)
 
-En **AngelSolutions** nos tomamos con la máxima seriedad la seguridad de nuestros sistemas, la integridad de los datos financieros y la protección de los usuarios. Si has identificado una vulnerabilidad de seguridad en el `Payment::SDK` (`payment-ruby-sdk`), te agradecemos tu colaboración para reportarla de forma responsable.
+En **AngelPixel** nos tomamos con la máxima seriedad la seguridad de nuestros sistemas, la integridad de los datos financieros y la protección de los usuarios. Si has identificado una vulnerabilidad de seguridad en el `Payment::SDK` (`payment-ruby-sdk`), te agradecemos tu colaboración para reportarla de forma responsable.
 
 ---
 
@@ -50,14 +50,14 @@ Nos comprometemos a actuar con celeridad ante cualquier reporte responsable:
 
 ## 4. Delimitación de Cumplimiento PCI-DSS (SAQ-A Scope Boundary)
 
-El `Payment::SDK` está diseñado específicamente para aislar a las aplicaciones que lo integran dentro del perímetro de menor riesgo de cumplimiento PCI-DSS (**SAQ-A / Self-Assessment Questionnaire A**):
+El `Payment::SDK` está diseñado específicamente para aislar a las aplicaciones que lo integran dentro del perímetro de menor riesgo de cumplimiento PCI-DSS ([SAQ-A / Self-Assessment Questionnaire A](https://www.pcisecuritystandards.org/)):
 
 1. **Principio de Tokenización Estricta:**  
    El SDK **nunca** almacena, manipula ni persiste en disco números de tarjeta de crédito/débito crudos (PAN - *Primary Account Number*) ni códigos de seguridad (CVV/CVC). Toda interacción con métodos de pago se realiza mediante identificadores tokenizados opacos (`pm_...`) emitidos directamente por la pasarela de pagos.
 2. **Política Zero-PII en Runtime:**  
-   Todas las excepciones (`Payment::SDK::ApiError` y subclases) y los adaptadores de logging (`Payment::SDK::Infrastructure::Logging::Sanitizer`) sanitizan de manera determinista encabezados de autorización, claves secretas y cuerpos de respuesta antes de ser emitidos a logs o herramientas de monitoreo (APM, Sentry, Datadog).
+   Todas las excepciones ([`Payment::SDK::ApiError`](../lib/payment/sdk/errors.rb) y subclases) y los adaptadores de logging ([`Payment::SDK::Infrastructure::Logging::Sanitizer`](../lib/payment/sdk/infrastructure/logging/sanitizer.rb)) sanitizan de manera determinista encabezados de autorización, claves secretas y cuerpos de respuesta antes de ser emitidos a logs o herramientas de monitoreo (APM, Sentry, Datadog). Para más detalles técnicos, consultar la [Auditoría de Hardening de Seguridad](../docs/audit/002-security_resilience_and_devsecops_audit.md).
 3. **Criptografía en Tiempo Constante:**  
-   La verificación de firmas de webhooks (`Payment::SDK::Infrastructure::Adapters::Crypto::Signature::Verifier::HmacSha256`) utiliza comparación en tiempo constante (`OpenSSL.fixed_length_secure_compare`) para neutralizar ataques de canal lateral basados en temporización (Timing Attacks).
+   La verificación de firmas de webhooks ([`Payment::SDK::Infrastructure::Adapters::Crypto::Signature::Verifier::HmacSha256`](../lib/payment/sdk/infrastructure/adapters/crypto/signature/verifier/hmac_sha256.rb)) utiliza comparación en tiempo constante (`OpenSSL.fixed_length_secure_compare`) para neutralizar ataques de canal lateral basados en temporización (Timing Attacks).
 
 ---
 
