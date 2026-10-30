@@ -26,6 +26,11 @@ class ConfigurationTest < Minitest::Test
     assert_equal 5, config.open_timeout
     assert_equal 2, config.max_retries
     assert_nil config.logger
+    assert_equal :info, config.log_level
+    assert_equal true, config.circuit_breaker_enabled
+    assert_equal 5, config.circuit_breaker_failure_threshold
+    assert_equal 30, config.circuit_breaker_reset_timeout
+    assert_equal 10, config.rate_limit_max_delay
   end
 
   def test_configure_via_block
@@ -73,6 +78,33 @@ class ConfigurationTest < Minitest::Test
       Payment::SDK.configure do |c|
         c.max_retries = -5
       end
+    end
+  end
+
+  def test_valid_and_invalid_log_levels
+    Payment::SDK.configure do |c|
+      c.log_level = :debug
+    end
+    assert_equal :debug, Payment::SDK.configuration.log_level
+
+    assert_raises(ArgumentError) do
+      Payment::SDK.configure do |c|
+        c.log_level = :invalid_level
+      end
+    end
+  end
+
+  def test_invalid_circuit_breaker_and_rate_limit_configs
+    assert_raises(ArgumentError) do
+      Payment::SDK.configure { |c| c.circuit_breaker_failure_threshold = 0 }
+    end
+
+    assert_raises(ArgumentError) do
+      Payment::SDK.configure { |c| c.circuit_breaker_reset_timeout = -1 }
+    end
+
+    assert_raises(ArgumentError) do
+      Payment::SDK.configure { |c| c.rate_limit_max_delay = 0 }
     end
   end
 end

@@ -1,0 +1,15 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Ignore synthetic test tokens and fixtures"
+paths = [
+  '''test/.*''',
+  '''docs/.*''',
+  '''TREE.txt'''
+]
+regexes = [
+  '''test_[a-zA-Z0-9_]+''',
+  '''sk_test_[a-zA-Z0-9_]+'''
+]
+

@@ -1,0 +1,24 @@
+name: 🔒 Reporte de Seguridad o Vulnerabilidad
+description: Si crees haber descubierto una falla de seguridad, repórtala de forma privada aquí.
+title: "[SECURITY]: "
+labels: ["security"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ⚠️ ALERTA DE SEGURIDAD
+        
+        **Por favor, NO publiques detalles de vulnerabilidades en este issue público.**
+        
+        La divulgación prematura de fallos de seguridad o fugas de datos puede comprometer a merchants e infraestructura financiera en producción.
+        
+        ### Cómo Reportar de Forma Segura y Cifrada:
+        
+        1. **Vía GitHub Security Advisories (Recomendado):**  
+           Utiliza el canal privado en la pestaña **Security > Advisories > Report a vulnerability**.
+        2. **Vía Correo Electrónico:**  
+           Envía los detalles técnicos y prueba de concepto directamente a nuestro equipo de seguridad:
+           📧 **`angel.szymczak+sec@hotmail.com`**
+        
+        Consulta nuestra [Política de Seguridad (`SECURITY.md`)](https://github.com/angelpixel-core/payment-ruby-sdk/blob/main/.github/SECURITY.md) para más información sobre nuestros acuerdos de nivel de servicio (SLA) y compromisos de triaje en menos de 24 horas.
+

@@ -1,0 +1,190 @@
+name: Security & DevSecOps
+
+on:
+  push:
+    branches: [main, "feature/**", "fix/**"]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitleaks:
+    name: Secret Scanning (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks secret detection
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  sast-brakeman:
+    name: SAST (Brakeman)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby 3.4
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Run Brakeman with SARIF export
+        run: |
+          bundle exec brakeman --force-scan --no-pager -w2 -o brakeman.sarif -o brakeman.txt || true
+          cat brakeman.txt
+
+      - name: Upload Brakeman SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: brakeman.sarif
+          category: brakeman
+        if: always()
+
+      - name: Enforce zero Brakeman security warnings
+        run: bundle exec rake security:brakeman
+
+  sast-semgrep:
+    name: SAST (Semgrep OSS)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep security rulesets
+        run: |
+          semgrep scan \
+            --config "p/ruby" \
+            --config "p/owasp-top-ten" \
+            --config "p/cwe-top-25" \
+            --sarif \
+            --output semgrep.sarif \
+            --error
+
+      - name: Upload Semgrep SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+        if: always()
+
+  dependency-audit:
+    name: Dependency Audit (bundler-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby 3.4
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Run bundler-audit vulnerability check
+        run: bundle exec bundle-audit check --update
+
+  sbom-generation:
+    name: Software Supply Chain (CycloneDX SBOM)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate CycloneDX SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          format: "cyclonedx-json"
+          output-file: "payment-sdk-cyclonedx.json"
+
+      - name: Upload CycloneDX SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cyclonedx-sbom
+          path: payment-sdk-cyclonedx.json
+          retention-days: 30
+
+  sonarcloud:
+    name: SaaS SAST (SonarCloud)
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - name: Check SonarCloud token availability
+        id: check-token
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "SONAR_TOKEN is not configured. Skipping SonarCloud analysis."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout repository
+        if: steps.check-token.outputs.configured == 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run SonarCloud scan
+        if: steps.check-token.outputs.configured == 'true'
+        uses: SonarSource/sonarcloud-github-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  snyk:
+    name: SaaS SCA & SAST (Snyk)
+    runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    steps:
+      - name: Check Snyk token availability
+        id: check-token
+        run: |
+          if [ -z "$SNYK_TOKEN" ]; then
+            echo "SNYK_TOKEN is not configured. Skipping Snyk scan."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout repository
+        if: steps.check-token.outputs.configured == 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby 3.4
+        if: steps.check-token.outputs.configured == 'true'
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Run Snyk Open Source vulnerability test
+        if: steps.check-token.outputs.configured == 'true'
+        uses: snyk/actions/ruby@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+

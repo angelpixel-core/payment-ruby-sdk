@@ -1,0 +1,72 @@
+# frozen_string_literal: true
+
+require "test_helper"
+require "payment/sdk/infrastructure/adapters/persistence/inbox/store/in_memory"
+
+class InfrastructureAdaptersPersistenceInboxStoreInMemoryTest < Minitest::Test
+  def setup
+    @store = Payment::SDK::Infrastructure::Adapters::Persistence::Inbox::Store::InMemory.new
+  end
+
+  def test_save_and_find
+    entry = {delivery_id: "del_1", raw_payload: "{}", status: :received}
+    persisted = @store.save(entry)
+
+    assert_equal "del_1", persisted[:delivery_id]
+    assert_equal :received, persisted[:status]
+
+    found = @store.find_by_delivery_id("del_1")
+    assert_equal "del_1", found[:delivery_id]
+  end
+
+  def test_duplicate_delivery_id_raises_error
+    entry = {delivery_id: "del_1", raw_payload: "{}", status: :received}
+    @store.save(entry)
+
+    assert_raises(ArgumentError) { @store.save(entry) }
+  end
+
+  def test_update_entry
+    entry = {delivery_id: "del_1", raw_payload: "{}", status: :received}
+    @store.save(entry)
+
+    updated = @store.update("del_1", status: :processed)
+    assert_equal :processed, updated[:status]
+    assert_equal :processed, @store.find_by_delivery_id("del_1")[:status]
+  end
+
+  def test_save_and_update_status
+    entry = {delivery_id: "del_2", raw_payload: "{}", status: :received}
+    @store.save(entry)
+
+    @store.update_status(delivery_id: "del_2", status: :failed, failure_reason: "err")
+    found = @store.find_by_delivery_id("del_2")
+    assert_equal :failed, found[:status]
+    assert_equal "err", found[:failure_reason]
+  end
+
+  def test_ttl_expiration_evicts_old_entries
+    ttl_store = Payment::SDK::Infrastructure::Adapters::Persistence::Inbox::Store::InMemory.new(ttl_seconds: 0.05)
+    entry = {delivery_id: "del_ttl", raw_payload: "{}", status: :received}
+    ttl_store.save(entry)
+
+    assert_equal "del_ttl", ttl_store.find_by_delivery_id("del_ttl")[:delivery_id]
+
+    sleep 0.06
+
+    # Should be evicted after TTL
+    assert_nil ttl_store.find_by_delivery_id("del_ttl")
+
+    # Saving again with same delivery_id works without duplicate error because it was evicted
+    assert ttl_store.save(entry)
+  end
+
+  def test_clear_removes_all_entries
+    entry = {delivery_id: "del_clear", raw_payload: "{}", status: :received}
+    @store.save(entry)
+    refute_nil @store.find_by_delivery_id("del_clear")
+
+    @store.clear!
+    assert_nil @store.find_by_delivery_id("del_clear")
+  end
+end
